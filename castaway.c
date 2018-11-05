@@ -16,7 +16,20 @@ ESTUDO DIRIGIDO 8 - PROGRAMAÇÃO CONCORRENTE - 2/2018
 #define FALSE 0
 #define CASTAWAYS 15
 
-int castaway_status[CASTAWAYS * 3];
+/*
+Argumentos de cada Náufrago
+status = estado atual do naufrago (0 - naufragado, 1 - resgatado , 2 - morto por outro naufrago, 3 - morto de fome)
+sexo = sexo e idade do naufrago (0 - Homem Adulto, 1 - Mulher Adulta, 2 - Homem Criança, 3 - Mulher Criança)
+nome = nome do náufrago 
+*/
+typedef struct{
+  int id;
+  int status;
+  int sex;
+  char name[15];
+} castaway_arg, *ptr_castaway_arg;
+
+castaway_arg cast_arg[CASTAWAYS];
 int number_adultmale, number_adultfemale, number_childrenmale, number_childrenfemale;
 
 char male_names[100][15] = {
@@ -84,6 +97,8 @@ char male_names[100][15] = {
     "Soneca",       /*61*/
     "Jesus",        /*62*/
     "Yan",          /*63*/
+    "Jamez",        /*64*/
+    "Xonas",        /*65*/
     "Yuri",         /*66*/
     "Zé",           /*67*/
     "Zacarias",     /*68*/
@@ -227,30 +242,6 @@ void clrscr(){
   system("@cls||clear");
 }
 
-void print_name(int sex, int number){
-  
-  switch (sex){
-    case 0:
-      printf("%s (Homem) ", &male_names[number][0]);
-      break;
-
-    case 1:
-      printf("%s (Mulher) ", &female_names[number][0]);
-      break;
-
-    case 2:
-      printf("%s (Criança H) ", &male_names[number][0]);
-      break;
-
-    case 3:
-      printf("%s (Criança M) ", &female_names[number][0]);
-      break;
-
-    default:
-      break;
-  }
-}
-
 void print_status(int status){
   
   switch (status){
@@ -282,8 +273,8 @@ i + 1 = sexo e idade do naufrago (0 - Homem Adulto, 1 - Mulher Adulta, 2 - Homem
 i + 2 = numero entre 0 e 99 equivalente ao seu nome 
 */
 void initialize_castaways(){
-  int length = CASTAWAYS * 3;
-  int i, sex;
+  int length = CASTAWAYS;
+  int i, name, j;
 
   number_adultfemale = 0;
   number_adultmale = 0;
@@ -292,11 +283,10 @@ void initialize_castaways(){
 
   srand(time(NULL));
 
-  for(i = 0; i < length; i=i+3){
-    castaway_status[i] = 0;
-    sex = (rand() % 4);
-    
-    switch (sex){
+  for(i = 0; i < length; i++){
+    cast_arg[i].id = i;
+    cast_arg[i].sex = (rand() % 4);
+    switch (cast_arg[i].sex){
       case 0:
         number_adultmale++;
         break;
@@ -316,34 +306,64 @@ void initialize_castaways(){
       default:
         break;
     }
-
-    castaway_status[i+1] = sex;
-    castaway_status[i+2] = (rand() % 100);
+    name = (rand() % 100);
+    j = 0;
+    if(cast_arg[i].sex == 0 || cast_arg[i].sex == 2){
+      while(male_names[name][j] != '\0'){
+        cast_arg[i].name[j] = male_names[name][j];
+        j++;
+      }
+    }
+    else{
+      while(female_names[name][j] != '\0'){
+        cast_arg[i].name[j] = female_names[name][j];
+        j++;
+      }
+    }
+    cast_arg[i].name[j] = '\0';
   }
 }
 
 void print_castaways(){
-  int length = CASTAWAYS * 3;
-  int i, j = 0;
+  int length = CASTAWAYS;
+  int i;
 
   printf("-------------------------\n");
   printf("LISTA DOS NÁUFRAGOS\n\n");
   printf("Homens Adultos: %d -- Mulheres Adultas: %d -- Crianças: %d\n\n", number_adultmale, number_adultfemale, number_childrenfemale + number_childrenmale);
 
-  for (i = 0; i < length; i = i + 3){
-    printf("Náufrago %d: ", j);
-    print_name(castaway_status[i+1],castaway_status[i+2]);
+  for (i = 0; i < length; i++){
+    printf("Náufrago %d: ", cast_arg[i].id);
+
+    switch (cast_arg[i].sex){
+      case 0:
+        printf("%s (Homem) ", &cast_arg[i].name[0]);
+        break;
+
+      case 1:
+        printf("%s (Mulher) ", &cast_arg[i].name[0]);
+        break;
+
+      case 2:
+        printf("%s (Criança H) ", &cast_arg[i].name[0]);
+        break;
+
+      case 3:
+        printf("%s (Criança M) ", &cast_arg[i].name[0]);
+        break;
+
+      default:
+        break;
+    }
+
     printf("- ");
-    print_status(castaway_status[i]);
+    print_status(cast_arg[i].status);
     printf("\n");
-    j++;
   }
   printf("-------------------------\n\n");
 }
 
 int shipwreck(){
-  int i;
-  int *id;
 
   printf("-------------------------\n");
   printf("\nACIDENTE!!!!!\n\n");
@@ -356,7 +376,7 @@ int shipwreck(){
   printf("\n\nPRESSIONE QUALQUER TECLA PARA CONTINUAR\n");
   getchar();
 
-  
+
 
   return 0;
 }
