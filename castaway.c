@@ -15,6 +15,8 @@ ESTUDO DIRIGIDO 8 - PROGRAMAÇÃO CONCORRENTE - 2/2018
 #define TRUE 1
 #define FALSE 0
 #define CASTAWAYS 15
+#define CARNE_HUMANA 300
+#define COMER 20
 
 /*
 Argumentos de cada Náufrago
@@ -30,7 +32,11 @@ typedef struct{
 } castaway_arg, *ptr_castaway_arg;
 
 castaway_arg cast_arg[CASTAWAYS];
-int number_adultmale, number_adultfemale, number_childrenmale, number_childrenfemale;
+pthread_t castaway[CASTAWAYS];
+pthread_mutex_t l = PTHREAD_MUTEX_INITIALIZER; /* lock pros náufragos*/
+pthread_cond_t cn = PTHREAD_COND_INITIALIZER; /* condicional pros náufragos*/
+int comida = 0;
+int number_adultmale, number_adultfemale, number_childrenmale, number_childrenfemale, id_kill;
 
 char male_names[100][15] = {
     "Artur",        /*0*/
@@ -361,22 +367,95 @@ void print_castaways(){
     printf("\n");
   }
   printf("-------------------------\n\n");
+
+  printf("\n\nPRESSIONE QUALQUER TECLA PARA CONTINUAR\n");
+  getchar();
+}
+
+int kill_someone(int id){
+  int someone = rand() % CASTAWAYS;
+  int i;
+  int found = 0;
+  int found_id = id;
+  for(i = someone; i < CASTAWAYS; i++){
+    if(cast_arg[i].status == 0){
+      if(cast_arg[i].id != id){
+        found = 1;
+        cast_arg[i].status = 2;
+        found_id = cast_arg[i].id;
+        break;
+      }
+    }
+  }
+  if(!found){
+    for(i = 0; i < someone; i++){
+      if(cast_arg[i].status == 0){
+        if(cast_arg[i].id != id){
+          cast_arg[i].status = 2;
+          found_id = cast_arg[i].id;
+          break;
+        }
+      }
+    }
+  }
+  return found_id;
+}
+
+void *surviving(void *arg) {
+  ptr_castaway_arg castaway_arg = (ptr_castaway_arg)arg;
+
+  while(castaway_arg->status == 0){
+    pthread_mutex_lock(&l);
+    while(comida == 0){
+      pthread_cond_wait(&cn, &l);
+    }
+    if(castaway_arg->status == 0){
+      printf("Náufrago %d (%s): Vou comer... ainda existem %d porções de comida\n", castaway_arg->id, castaway_arg->name, comida);
+      sleep(1);
+      comida-=COMER;
+      if(comida == 0){
+        printf("Náufrago %d (%s): EITA... existem %d porções de comida... alguém precisa ser sacrificado!\n", castaway_arg->id, castaway_arg->name, comida);
+        id_kill = kill_someone(castaway_arg->id);
+        if(id_kill == castaway_arg->id){
+          printf("Infelizmente, não tem mais ninguém...\n");
+          castaway_arg->status = 3;
+        }
+        else{
+          printf("Náufrago %d (%s) foi morto por Náufrago %d (%s)... conseguiu-se %d porções de comida a mais\n", cast_arg[id_kill].id, cast_arg[id_kill].name, castaway_arg->id, castaway_arg->name, CARNE_HUMANA);
+          comida += CARNE_HUMANA;
+        }
+      }
+    }
+    pthread_mutex_unlock(&l);
+    sleep(3);
+  }
+  pthread_exit(0);
 }
 
 int shipwreck(){
+  int i;
 
   printf("-------------------------\n");
   printf("\nACIDENTE!!!!!\n\n");
   printf("Um cruzeiro naufragou no oceano atlântico...\n");
   printf("Os %d sobreviventes nadaram até uma ilha próxima e aguardam resgate...\n", CASTAWAYS);
+  srand(time(NULL));
+  comida = (rand() % 5) * 100;
+  printf("Um total equivalente à %d porções de comida foi levado dos restos do navio até a ilha...\n", comida);
+  printf("Quantos sobreviverão???\n\n");
 
   initialize_castaways();
   print_castaways();
 
-  printf("\n\nPRESSIONE QUALQUER TECLA PARA CONTINUAR\n");
-  getchar();
+  for(i = 0; i < CASTAWAYS; i++){
+    pthread_create(&castaway[i], NULL, surviving, (void *)(&(cast_arg[i])));
+  }
 
+  for (i = 0; i < CASTAWAYS; i++){
+    pthread_join(castaway[i], NULL);
+  }
 
+  print_castaways();
 
   return 0;
 }
@@ -385,7 +464,6 @@ int main(){
   int continue_simulation = TRUE;
   char input;
 
-  clrscr();
   printf("-------------------------\n");
   printf("\nCASTAWAY PROBLEM\n\n");
   printf("-------------------------\n\n");
