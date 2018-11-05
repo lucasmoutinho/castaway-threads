@@ -14,7 +14,7 @@ ESTUDO DIRIGIDO 8 - PROGRAMAÇÃO CONCORRENTE - 2/2018
 
 #define TRUE 1
 #define FALSE 0
-#define CASTAWAYS 30
+#define CASTAWAYS 15
 
 int castaway_status[CASTAWAYS * 3];
 int number_adultmale, number_adultfemale, number_childrenmale, number_childrenfemale;
@@ -223,6 +223,10 @@ char female_names[100][15] = {
     "Cremilda"     /*99*/
 };
 
+void clrscr(){
+  system("@cls||clear");
+}
+
 void print_name(int sex, int number){
   
   switch (sex){
@@ -328,7 +332,6 @@ void print_castaways(){
 
   for (i = 0; i < length; i = i + 3){
     printf("Náufrago %d: ", j);
-    printf("%d ", castaway_status[i+2]);
     print_name(castaway_status[i+1],castaway_status[i+2]);
     printf("- ");
     print_status(castaway_status[i]);
@@ -350,6 +353,11 @@ int shipwreck(){
   initialize_castaways();
   print_castaways();
 
+  printf("\n\nPRESSIONE QUALQUER TECLA PARA CONTINUAR\n");
+  getchar();
+
+  
+
   return 0;
 }
 
@@ -357,6 +365,7 @@ int main(){
   int continue_simulation = TRUE;
   char input;
 
+  clrscr();
   printf("-------------------------\n");
   printf("\nCASTAWAY PROBLEM\n\n");
   printf("-------------------------\n\n");
@@ -379,6 +388,7 @@ int main(){
       continue_simulation = FALSE;
     }
     else{
+      clrscr();
       shipwreck();
     }
   } while (continue_simulation);
