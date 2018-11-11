@@ -390,7 +390,7 @@ void print_castaways(){
   }
   printf("-------------------------\n\n");
 
-  printf("\n\nPRESSIONE QUALQUER TECLA PARA CONTINUAR\n");
+  printf("\n\nPRESSIONE ENTER PARA CONTINUAR\n");
   getchar();
 }
 
@@ -653,6 +653,7 @@ int shipwreck(){
   number_alive = CASTAWAYS;
   capacity = BOAT_CAPACITY;
   boat_waiting = FALSE;
+  sem_init(&wait_boat, 0, 0);
 
   printf("-------------------------\n");
   printf("\nACIDENTE!!!!!\n\n");
@@ -688,7 +689,6 @@ int main(){
   int continue_simulation = TRUE;
   char input;
 
-  sem_init(&wait_boat, 0, 0);
 
   printf("-------------------------\n");
   printf("\nCASTAWAY PROBLEM\n\n");
