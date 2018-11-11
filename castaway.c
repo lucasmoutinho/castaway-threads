@@ -1,23 +1,25 @@
 /*
-
 ALUNO: LUCAS DA SILVA MOUTINHO - 15/0015747
 PROFESSOR: ALCHIERI
-ESTUDO DIRIGIDO 8 - PROGRAMAÇÃO CONCORRENTE - 2/2018
-
+TRABALHO DE PC - CASTAWAY PROBLEM - PROGRAMAÇÃO CONCORRENTE - 2/2018
 */
 
+
+/* 
+Bibliotecas
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <semaphore.h>
 
-#define TRUE 1
-#define FALSE 0
-#define CASTAWAYS 17
-#define HUMAN_FOOD 200
-#define EAT 20
-#define BOAT_CAPACITY 3
+#define TRUE 1          /* verdadeiro */
+#define FALSE 0         /* falso */
+#define CASTAWAYS 17    /* Número inicial de Náufragos na ilha */
+#define HUMAN_FOOD 200  /* Quantidade de porções que um Náufrago morto gera */
+#define EAT 20          /* Quantidade de porções comidas por vez por cada náufrago */
+#define BOAT_CAPACITY 3 /* Número de vagas do barco */
 
 /*
 Argumentos de cada Náufrago
@@ -41,231 +43,243 @@ typedef struct{
   int status;
 } rescue_boat_arg, *ptr_rescue_boat_arg;
 
-castaway_arg cast_arg[CASTAWAYS]; /* Argumento dos Náufragos */
-rescue_boat_arg boat_arg; /* Argumento do barco */
-sem_t wait_boat; /* Semáforos para o barco */ 
-pthread_t castaway[CASTAWAYS]; /* Thread dos Náufragos */
-pthread_t boat; /* Thread do barco */
-pthread_mutex_t l = PTHREAD_MUTEX_INITIALIZER; /* lock pros náufragos*/
-pthread_cond_t cm = PTHREAD_COND_INITIALIZER;      /* condicional pros náufragos homens adultos - man*/
-pthread_cond_t cw = PTHREAD_COND_INITIALIZER;      /* condicional pros náufragos mulheres adultos - woman*/
-int comida = 0; /* Comida */
+castaway_arg cast_arg[CASTAWAYS];                                                     /* Argumento dos Náufragos */
+rescue_boat_arg boat_arg;                                                             /* Argumento do barco */
+sem_t wait_boat;                                                                      /* Semáforos para o barco */
+pthread_t castaway[CASTAWAYS];                                                        /* Thread dos Náufragos */
+pthread_t boat;                                                                       /* Thread do barco */
+pthread_mutex_t l = PTHREAD_MUTEX_INITIALIZER;                                        /* lock pros náufragos*/
+pthread_cond_t cm = PTHREAD_COND_INITIALIZER;                                         /* condicional pros náufragos homens adultos - man*/
+pthread_cond_t cw = PTHREAD_COND_INITIALIZER;                                         /* condicional pros náufragos mulheres adultos - woman*/
+int comida = 0;                                                                       /* Comida */
 int number_adultmale, number_adultfemale, number_childrenmale, number_childrenfemale; /* Número de náufragos de cada sexo e idade */
-int children_waiting, female_waiting, boat_waiting; /* Número de Náufragos esperando */
-int number_alive = CASTAWAYS; 
-int capacity = BOAT_CAPACITY;
-int id_kill;
+int children_waiting, female_waiting, boat_waiting;                                   /* Número de Náufragos e barco esperando */
+int number_alive = CASTAWAYS;                                                         /* Número de Náufragos vivos na ilha */
+int capacity = BOAT_CAPACITY;                                                         /* Número de vagas restantes no barco */
+int id_kill;                                                                          /* ID do Náufrago que morreu */
 
+/*
+Lista de nomes masculinos
+*/
 char male_names[100][15] = {
-    "Artur",        /*0*/
-    "Alfredo",      /*1*/
-    "Almeida",      /*2*/
-    "Giamps",       /*3*/
-    "Abraão",       /*4*/
-    "Apolo",        /*5*/
-    "Daniels",         /*6*/
-    "Dé",     /*7*/
-    "Diogo",   /*8*/
-    "Batman",        /*9*/
-    "Carvalho",      /*10*/
-    "Cláudio",      /*11*/
-    "César",        /*12*/
-    "Jadiel",       /*13*/
-    "Cabrinha",     /*14*/
-    "Dante",        /*15*/
-    "Rodrigo Chaves",      /*16*/
-    "Daniel",       /*17*/
-    "Diego",        /*18*/
-    "Edu",          /*19*/
-    "Allison",     /*20*/
-    "Fagner",       /*21*/
-    "Fred",    /*22*/
-    "Geraldo",       /*23*/
-    "Gonzaga",      /*24*/
-    "Galvão",       /*25*/
-    "Capoeira",      /*26*/
-    "Kipman",       /*27*/
-    "Igor Batata",         /*28*/
-    "Ícaro",       /*29*/
-    "João",         /*30*/
-    "Jeziel",       /*31*/
-    "Rodolfo",     /*32*/
-    "Jarbas",       /*33*/
-    "Kevin",        /*34*/
-    "Lucas",        /*35*/
-    "Jureg",      /*36*/
-    "Mesquita",      /*37*/
-    "Marco Véi",       /*38*/
-    "Marcola",    /*39*/
+    "Artur",          /*0*/
+    "Alfredo",        /*1*/
+    "Almeida",        /*2*/
+    "Giamps",         /*3*/
+    "Abraão",         /*4*/
+    "Apolo",          /*5*/
+    "Daniels",        /*6*/
+    "Dé",             /*7*/
+    "Diogo",          /*8*/
+    "Batman",         /*9*/
+    "Carvalho",       /*10*/
+    "Cláudio",        /*11*/
+    "César",          /*12*/
+    "Jadiel",         /*13*/
+    "Cabrinha",       /*14*/
+    "Dante",          /*15*/
+    "Rodrigo Chaves", /*16*/
+    "Daniel",         /*17*/
+    "Diego",          /*18*/
+    "Edu",            /*19*/
+    "Allison",        /*20*/
+    "Fagner",         /*21*/
+    "Fred",           /*22*/
+    "Geraldo",        /*23*/
+    "Gonzaga",        /*24*/
+    "Galvão",         /*25*/
+    "Capoeira",       /*26*/
+    "Kipman",         /*27*/
+    "Igor Batata",    /*28*/
+    "Ícaro",          /*29*/
+    "João",           /*30*/
+    "Jeziel",         /*31*/
+    "Rodolfo",        /*32*/
+    "Jarbas",         /*33*/
+    "Kevin",          /*34*/
+    "Lucas",          /*35*/
+    "Jureg",          /*36*/
+    "Mesquita",       /*37*/
+    "Marco Véi",      /*38*/
+    "Marcola",        /*39*/
     "Kilmer",         /*40*/
-    "Nathan",       /*41*/
-    "Billy",       /*42*/
-    "Ribas",      /*43*/
-    "Nicholas",     /*44*/
-    "Otávio",       /*45*/
-    "Perotto",      /*46*/
-    "Sodré",       /*47*/
-    "Renato",      /*48*/
-    "Rafael",       /*49*/
-    "Halbe",    /*50*/
+    "Nathan",         /*41*/
+    "Billy",          /*42*/
+    "Ribas",          /*43*/
+    "Nicholas",       /*44*/
+    "Otávio",         /*45*/
+    "Perotto",        /*46*/
+    "Sodré",          /*47*/
+    "Renato",         /*48*/
+    "Rafael",         /*49*/
+    "Halbe",          /*50*/
     "Rebores",        /*51*/
-    "Struct",        /*52*/
-    "Tuts",      /*53*/
-    "Thaleco",       /*54*/
-    "Thomas",       /*55*/
-    "Uriel",        /*56*/
-    "Naves",     /*57*/
-    "Vitor Pontes",     /*58*/
-    "Xavier",       /*59*/
-    "Santaguida",       /*60*/
-    "Soneca",       /*61*/
-    "Jesus",        /*62*/
-    "Yan",          /*63*/
-    "Yamin",        /*64*/
-    "Xonas",        /*65*/
-    "Vinícius",         /*66*/
-    "Vasconcelos",           /*67*/
-    "Zacarias",     /*68*/
-    "Moutinho",     /*69*/
-    "Ximenes",      /*70*/
-    "João Gabriel", /*71*/
-    "Zanina",       /*72*/
-    "Bruno Helder",         /*73*/
-    "Alchieri",     /*74*/
-    "Davi",       /*75*/
-    "Wladimir",     /*76*/
+    "Struct",         /*52*/
+    "Tuts",           /*53*/
+    "Thaleco",        /*54*/
+    "Thomas",         /*55*/
+    "Uriel",          /*56*/
+    "Naves",          /*57*/
+    "Vitor Pontes",   /*58*/
+    "Xavier",         /*59*/
+    "Santaguida",     /*60*/
+    "Soneca",         /*61*/
+    "Jesus",          /*62*/
+    "Yan",            /*63*/
+    "Yamin",          /*64*/
+    "Xonas",          /*65*/
+    "Vinícius",       /*66*/
+    "Vasconcelos",    /*67*/
+    "Zacarias",       /*68*/
+    "Moutinho",       /*69*/
+    "Ximenes",        /*70*/
+    "João Gabriel",   /*71*/
+    "Zanina",         /*72*/
+    "Bruno Helder",   /*73*/
+    "Alchieri",       /*74*/
+    "Davi",           /*75*/
+    "Wladimir",       /*76*/
     "Vitinho",        /*77*/
-    "Rebores",      /*78*/
-    "Mafra",        /*79*/
-    "Tiago Cabral",        /*80*/
-    "Alex Souza",   /*81*/
-    "Caio",         /*82*/
-    "Otto",         /*83*/
-    "Batista",      /*84*/
-    "Zohan",        /*85*/
-    "Leozinho",          /*86*/
-    "Khalil",       /*87*/
-    "Buda",         /*88*/
-    "Kratos",       /*89*/
-    "Antônio",      /*90*/
-    "Xerxes",       /*91*/
-    "Thiaguinho",       /*92*/
-    "Andrey",       /*93*/
-    "Oswaldo",      /*94*/
-    "Maranhão",     /*95*/
-    "Fillype",     /*96*/
-    "Babilônico",       /*97*/
-    "Pedro",        /*98*/
-    "Juju"          /*99*/
+    "Rebores",        /*78*/
+    "Mafra",          /*79*/
+    "Tiago Cabral",   /*80*/
+    "Alex Souza",     /*81*/
+    "Caio",           /*82*/
+    "Otto",           /*83*/
+    "Batista",        /*84*/
+    "Zohan",          /*85*/
+    "Leozinho",       /*86*/
+    "Khalil",         /*87*/
+    "Buda",           /*88*/
+    "Kratos",         /*89*/
+    "Antônio",        /*90*/
+    "Xerxes",         /*91*/
+    "Thiaguinho",     /*92*/
+    "Andrey",         /*93*/
+    "Oswaldo",        /*94*/
+    "Maranhão",       /*95*/
+    "Fillype",        /*96*/
+    "Babilônico",     /*97*/
+    "Pedro",          /*98*/
+    "Juju"            /*99*/
 };
 
+/*
+Lista de nomes femininos
+*/
 char female_names[100][15] = {
-    "Anitta",   /*0*/
-    "Afrodite",    /*1*/
-    "Amanda",      /*2*/
-    "Madonna",      /*3*/
-    "Ana",         /*4*/
-    "Betty",     /*5*/
-    "Bella",        /*6*/
-    "Bernadete",   /*7*/
-    "Carol",      /*8*/
-    "Caterina",    /*9*/
-    "Alice",     /*10*/
-    "Léia",   /*11*/
-    "Patrícia",  /*12*/
-    "Vanessa",       /*13*/
-    "Cris",    /*14*/
-    "Dafne",       /*15*/
-    "Nayara",       /*16*/
-    "Denise",      /*17*/
-    "Genaína",    /*18*/
-    "Carla",    /*19*/
-    "Dolores",     /*20*/
-    "Edna",        /*21*/
-    "Elizabeth",   /*22*/
-    "Érica",       /*23*/
-    "Clara",     /*24*/
-    "Fátima",      /*25*/
-    "Flores",        /*26*/
-    "Velma",   /*27*/
-    "Gabi",        /*28*/
-    "Gertrudes",   /*29*/
-    "Padmé",       /*30*/
-    "Rey",     /*31*/
-    "Irina",       /*32*/
-    "Emma Stone",      /*33*/
-    "Jennifer",      /*34*/
-    "Jaqueline",   /*35*/
-    "Joelma",      /*36*/
-    "Scarllet",      /*37*/
-    "Alyson",    /*38*/
-    "Jussara",     /*39*/
-    "Luísa",       /*40*/
-    "Arya",       /*41*/
-    "Lana",        /*42*/
-    "Karen",       /*43*/
-    "Kátia",       /*44*/
-    "Kelly",       /*45*/
-    "Katarina",    /*46*/
-    "Kyara",       /*47*/
-    "Lisa",        /*48*/
-    "Sarah Connor",    /*49*/
-    "Maria",       /*50*/
-    "Mulan",     /*51*/
-    "Morgana",     /*52*/
-    "Nádia",       /*53*/
-    "Carolina",    /*54*/
-    "Norma",       /*55*/
-    "Nina",        /*56*/
-    "Angelina Joeli",       /*57*/
-    "Anne Hathaway",      /*58*/
-    "Rihanna",      /*59*/
-    "Ygritte",      /*60*/
-    "Paty",    /*61*/
-    "Penélope",    /*62*/
-    "Priscila",    /*63*/
-    "Uma Thurman",     /*64*/
-    "Renata",      /*65*/
-    "Rosa",        /*66*/
-    "Mia Wallace",     /*67*/
-    "Ellie",        /*68*/
-    "Sofia",       /*69*/
-    "Sabrina",     /*70*/
-    "Xuxa",        /*71*/
-    "Samara",      /*72*/
-    "Socorro",     /*73*/
-    "Solange",     /*74*/
-    "Susana",      /*75*/
-    "Daenerys",      /*76*/
-    "Lagertha",      /*77*/
-    "Bianca",      /*78*/
-    "Terezinha",   /*79*/
-    "Padmé",      /*80*/
-    "Rapunzel",    /*81*/
-    "Vitória",   /*82*/
-    "Mariana",     /*83*/
-    "Viviana",     /*84*/
-    "Violeta",     /*85*/
-    "Welwitschia", /*86*/
-    "Jill Valentine",       /*87*/
-    "Fiona",        /*88*/
-    "Yasmin",      /*89*/
-    "Zahra",       /*90*/
-    "Zulmira",     /*91*/
-    "Cersei",     /*92*/
-    "Zoraida",     /*93*/
-    "Dilma",       /*94*/
-    "Hermione",    /*95*/
-    "Elizabeth Swan",      /*96*/
-    "Eliana",      /*97*/
-    "Creusa",      /*98*/
-    "Cremilda"     /*99*/
+    "Anitta",         /*0*/
+    "Afrodite",       /*1*/
+    "Amanda",         /*2*/
+    "Madonna",        /*3*/
+    "Ana",            /*4*/
+    "Betty",          /*5*/
+    "Bella",          /*6*/
+    "Bernadete",      /*7*/
+    "Carol",          /*8*/
+    "Caterina",       /*9*/
+    "Alice",          /*10*/
+    "Léia",           /*11*/
+    "Patrícia",       /*12*/
+    "Vanessa",        /*13*/
+    "Cris",           /*14*/
+    "Dafne",          /*15*/
+    "Nayara",         /*16*/
+    "Denise",         /*17*/
+    "Genaína",        /*18*/
+    "Carla",          /*19*/
+    "Dolores",        /*20*/
+    "Edna",           /*21*/
+    "Elizabeth",      /*22*/
+    "Érica",          /*23*/
+    "Clara",          /*24*/
+    "Fátima",         /*25*/
+    "Flores",         /*26*/
+    "Velma",          /*27*/
+    "Gabi",           /*28*/
+    "Gertrudes",      /*29*/
+    "Padmé",          /*30*/
+    "Rey",            /*31*/
+    "Irina",          /*32*/
+    "Emma Stone",     /*33*/
+    "Jennifer",       /*34*/
+    "Jaqueline",      /*35*/
+    "Joelma",         /*36*/
+    "Scarllet",       /*37*/
+    "Alyson",         /*38*/
+    "Jussara",        /*39*/
+    "Luísa",          /*40*/
+    "Arya",           /*41*/
+    "Lana",           /*42*/
+    "Karen",          /*43*/
+    "Kátia",          /*44*/
+    "Kelly",          /*45*/
+    "Katarina",       /*46*/
+    "Kyara",          /*47*/
+    "Lisa",           /*48*/
+    "Sarah Connor",   /*49*/
+    "Maria",          /*50*/
+    "Mulan",          /*51*/
+    "Morgana",        /*52*/
+    "Nádia",          /*53*/
+    "Carolina",       /*54*/
+    "Norma",          /*55*/
+    "Nina",           /*56*/
+    "Angelina Joeli", /*57*/
+    "Anne Hathaway",  /*58*/
+    "Rihanna",        /*59*/
+    "Ygritte",        /*60*/
+    "Paty",           /*61*/
+    "Penélope",       /*62*/
+    "Priscila",       /*63*/
+    "Uma Thurman",    /*64*/
+    "Renata",         /*65*/
+    "Rosa",           /*66*/
+    "Mia Wallace",    /*67*/
+    "Ellie",          /*68*/
+    "Sofia",          /*69*/
+    "Sabrina",        /*70*/
+    "Xuxa",           /*71*/
+    "Samara",         /*72*/
+    "Socorro",        /*73*/
+    "Solange",        /*74*/
+    "Susana",         /*75*/
+    "Daenerys",       /*76*/
+    "Lagertha",       /*77*/
+    "Bianca",         /*78*/
+    "Terezinha",      /*79*/
+    "Padmé",          /*80*/
+    "Rapunzel",       /*81*/
+    "Vitória",        /*82*/
+    "Mariana",        /*83*/
+    "Viviana",        /*84*/
+    "Violeta",        /*85*/
+    "Welwitschia",    /*86*/
+    "Jill Valentine", /*87*/
+    "Fiona",          /*88*/
+    "Yasmin",         /*89*/
+    "Zahra",          /*90*/
+    "Zulmira",        /*91*/
+    "Cersei",         /*92*/
+    "Zoraida",        /*93*/
+    "Dilma",          /*94*/
+    "Hermione",       /*95*/
+    "Elizabeth Swan", /*96*/
+    "Eliana",         /*97*/
+    "Creusa",         /*98*/
+    "Cremilda"        /*99*/
 };
 
+/*
+Função para limpar a tela do terminal
+*/
 void clrscr(){
   system("@cls||clear");
 }
 
+/*
+Função para imprimir na tela do terminal o status de cada náufrago
+*/
 void print_status(int status){
   
   switch (status){
@@ -295,6 +309,8 @@ Seguindo os indices:
 i = estado atual do naufrago (0 - naufragado, 1 - resgatado , 2 - morto por outro naufrago, 3 - morto de fome)
 i + 1 = sexo e idade do naufrago (0 - Homem Adulto, 1 - Mulher Adulta, 2 - Homem Criança, 3 - Mulher Criança)
 i + 2 = numero entre 0 e 99 equivalente ao seu nome 
+
+Esta função inicializa os náufragos com seus respectivos argumentos
 */
 void initialize_castaways(){
   int length = CASTAWAYS;
@@ -352,6 +368,9 @@ void initialize_castaways(){
   female_waiting = number_adultfemale;
 }
 
+/*
+Função para imprimir na tela a lista de náufragos
+*/
 void print_castaways(){
   int length = CASTAWAYS;
   int i;
@@ -397,6 +416,8 @@ void print_castaways(){
 /*
 Argumentos de cada Barco
 status = estado atual do barco (0 - resgatando, 1 - esperando na ilha , 2 - terminou resgate)
+
+Esta função representa o comportamento da thread barco
 */
 void *boat_rescuing(void *arg){
   ptr_rescue_boat_arg rescue_boat_arg = (ptr_rescue_boat_arg)arg;
@@ -428,6 +449,9 @@ void *boat_rescuing(void *arg){
   pthread_exit(0);
 }
 
+/*
+Função para diminuir o número de mulheres e crianças totais na ilha
+*/
 void remove_waiting(int sex){
   if(sex == 1){
     female_waiting--;
@@ -437,6 +461,9 @@ void remove_waiting(int sex){
   }
 }
 
+/*
+Função para escolher um náufrago restante na ilha randomicamente e matá-lo 
+*/
 int kill_someone(int id){
   int someone = rand() % CASTAWAYS;
   int i;
@@ -470,6 +497,9 @@ int kill_someone(int id){
   return found_id;
 }
 
+/*
+Função de comportamento das threads de crianças na fila de espera do barco
+*/
 void children_castaway(ptr_castaway_arg castaway_arg){
 
   pthread_mutex_lock(&l);
@@ -500,6 +530,9 @@ void children_castaway(ptr_castaway_arg castaway_arg){
   pthread_mutex_unlock(&l);
 }
 
+/*
+Função de comportamento das threads de mulheres adultas na fila de espera do barco
+*/
 void woman_castaway(ptr_castaway_arg castaway_arg){
 
   pthread_mutex_lock(&l);
@@ -536,6 +569,9 @@ void woman_castaway(ptr_castaway_arg castaway_arg){
   pthread_mutex_unlock(&l);
 }
 
+/*
+Função de comportamento das threads de homens adultos na fila de espera do barco
+*/
 void man_castaway(ptr_castaway_arg castaway_arg){
 
   pthread_mutex_lock(&l);
@@ -577,6 +613,9 @@ Seguindo os indices:
 i = estado atual do naufrago (0 - naufragado, 1 - resgatado , 2 - morto por outro naufrago, 3 - morto de fome)
 i + 1 = sexo e idade do naufrago (0 - Homem Adulto, 1 - Mulher Adulta, 2 - Homem Criança, 3 - Mulher Criança)
 i + 2 = numero entre 0 e 99 equivalente ao seu nome 
+
+Esta função representa o comprotamento das threads de náufragos na ilha, seja esperando o barco
+ou dividindo o recurso das comidas e matando outros náufragos para gerar mais comida
 */
 void *surviving(void *arg) {
   ptr_castaway_arg castaway_arg = (ptr_castaway_arg)arg;
@@ -639,6 +678,9 @@ void *surviving(void *arg) {
   pthread_exit(0);
 }
 
+/*
+Função para gerar a porção de comida inicial na ilha
+*/
 void initialize_food(){
   srand(time(NULL));
   comida = (rand() % 6) * 100;
@@ -647,6 +689,9 @@ void initialize_food(){
   }
 }
 
+/*
+Função que inicializa as threads barco e náufragos e inicia a simulação de naufrágio
+*/
 int shipwreck(){
   int i;
 
@@ -685,6 +730,9 @@ int shipwreck(){
   return 0;
 }
 
+/*
+Função main. Permanece em um loop de acordo com a resposta escrita pelo usuário no terminal
+*/
 int main(){
   int continue_simulation = TRUE;
   char input;
