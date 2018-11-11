@@ -14,10 +14,10 @@ ESTUDO DIRIGIDO 8 - PROGRAMAÇÃO CONCORRENTE - 2/2018
 
 #define TRUE 1
 #define FALSE 0
-#define CASTAWAYS 15
-#define HUMAN_FOOD 300
+#define CASTAWAYS 17
+#define HUMAN_FOOD 200
 #define EAT 20
-#define BOATS 1
+#define BOAT_CAPACITY 3
 
 /*
 Argumentos de cada Náufrago
@@ -41,161 +41,167 @@ typedef struct{
   int status;
 } rescue_boat_arg, *ptr_rescue_boat_arg;
 
-castaway_arg cast_arg[CASTAWAYS];
-rescue_boat_arg boat_arg[BOATS]; 
-pthread_t castaway[CASTAWAYS];
-pthread_t boat[BOATS];
+castaway_arg cast_arg[CASTAWAYS]; /* Argumento dos Náufragos */
+rescue_boat_arg boat_arg; /* Argumento do barco */
+sem_t wait_boat; /* Semáforos para o barco */ 
+pthread_t castaway[CASTAWAYS]; /* Thread dos Náufragos */
+pthread_t boat; /* Thread do barco */
 pthread_mutex_t l = PTHREAD_MUTEX_INITIALIZER; /* lock pros náufragos*/
-pthread_cond_t cn = PTHREAD_COND_INITIALIZER; /* condicional pros náufragos*/
-int comida = 0;
-int number_adultmale, number_adultfemale, number_childrenmale, number_childrenfemale, id_kill;
+pthread_cond_t cm = PTHREAD_COND_INITIALIZER;      /* condicional pros náufragos homens adultos - man*/
+pthread_cond_t cw = PTHREAD_COND_INITIALIZER;      /* condicional pros náufragos mulheres adultos - woman*/
+int comida = 0; /* Comida */
+int number_adultmale, number_adultfemale, number_childrenmale, number_childrenfemale; /* Número de náufragos de cada sexo e idade */
+int children_waiting, female_waiting, boat_waiting; /* Número de Náufragos esperando */
+int number_alive = CASTAWAYS; 
+int capacity = BOAT_CAPACITY;
+int id_kill;
 
 char male_names[100][15] = {
     "Artur",        /*0*/
     "Alfredo",      /*1*/
-    "Adelmar",      /*2*/
-    "Álvaro",       /*3*/
+    "Almeida",      /*2*/
+    "Giamps",       /*3*/
     "Abraão",       /*4*/
     "Apolo",        /*5*/
-    "Beto",         /*6*/
-    "Baltasar",     /*7*/
-    "Bartolomeu",   /*8*/
-    "Bóris",        /*9*/
-    "Caetano",      /*10*/
+    "Daniels",         /*6*/
+    "Dé",     /*7*/
+    "Diogo",   /*8*/
+    "Batman",        /*9*/
+    "Carvalho",      /*10*/
     "Cláudio",      /*11*/
     "César",        /*12*/
-    "Clóvis",       /*13*/
+    "Jadiel",       /*13*/
     "Cabrinha",     /*14*/
     "Dante",        /*15*/
-    "Dorival",      /*16*/
+    "Rodrigo Chaves",      /*16*/
     "Daniel",       /*17*/
     "Diego",        /*18*/
     "Edu",          /*19*/
-    "Ezequiel",     /*20*/
+    "Allison",     /*20*/
     "Fagner",       /*21*/
-    "Frederico",    /*22*/
-    "Gerson",       /*23*/
+    "Fred",    /*22*/
+    "Geraldo",       /*23*/
     "Gonzaga",      /*24*/
     "Galvão",       /*25*/
-    "Haroldo",      /*26*/
-    "Hermes",       /*27*/
-    "ígor",         /*28*/
-    "Irineu",       /*29*/
+    "Capoeira",      /*26*/
+    "Kipman",       /*27*/
+    "Igor Batata",         /*28*/
+    "Ícaro",       /*29*/
     "João",         /*30*/
     "Jeziel",       /*31*/
-    "Joselino",     /*32*/
+    "Rodolfo",     /*32*/
     "Jarbas",       /*33*/
     "Kevin",        /*34*/
     "Lucas",        /*35*/
-    "Leôncio",      /*36*/
-    "Lorenzo",      /*37*/
-    "Moacir",       /*38*/
-    "Matusalém",    /*39*/
-    "Mara",         /*40*/
+    "Jureg",      /*36*/
+    "Mesquita",      /*37*/
+    "Marco Véi",       /*38*/
+    "Marcola",    /*39*/
+    "Kilmer",         /*40*/
     "Nathan",       /*41*/
-    "Nazaré",       /*42*/
-    "Nivaldo",      /*43*/
+    "Billy",       /*42*/
+    "Ribas",      /*43*/
     "Nicholas",     /*44*/
     "Otávio",       /*45*/
     "Perotto",      /*46*/
-    "Plínio",       /*47*/
-    "Quirilo",      /*48*/
+    "Sodré",       /*47*/
+    "Renato",      /*48*/
     "Rafael",       /*49*/
-    "Sanderson",    /*50*/
-    "Selmo",        /*51*/
-    "Silva",        /*52*/
-    "Tatiano",      /*53*/
-    "Thales",       /*54*/
+    "Halbe",    /*50*/
+    "Rebores",        /*51*/
+    "Struct",        /*52*/
+    "Tuts",      /*53*/
+    "Thaleco",       /*54*/
     "Thomas",       /*55*/
     "Uriel",        /*56*/
-    "Valdemar",     /*57*/
-    "Virgínio",     /*58*/
+    "Naves",     /*57*/
+    "Vitor Pontes",     /*58*/
     "Xavier",       /*59*/
-    "Wilson",       /*60*/
+    "Santaguida",       /*60*/
     "Soneca",       /*61*/
     "Jesus",        /*62*/
     "Yan",          /*63*/
-    "Jamez",        /*64*/
+    "Yamin",        /*64*/
     "Xonas",        /*65*/
-    "Yuri",         /*66*/
-    "Zé",           /*67*/
+    "Vinícius",         /*66*/
+    "Vasconcelos",           /*67*/
     "Zacarias",     /*68*/
     "Moutinho",     /*69*/
     "Ximenes",      /*70*/
     "João Gabriel", /*71*/
     "Zanina",       /*72*/
-    "Yago",         /*73*/
+    "Bruno Helder",         /*73*/
     "Alchieri",     /*74*/
-    "Vânder",       /*75*/
+    "Davi",       /*75*/
     "Wladimir",     /*76*/
-    "Vitor",        /*77*/
+    "Vitinho",        /*77*/
     "Rebores",      /*78*/
     "Mafra",        /*79*/
-    "Tiago",        /*80*/
+    "Tiago Cabral",        /*80*/
     "Alex Souza",   /*81*/
-    "Kaio",         /*82*/
+    "Caio",         /*82*/
     "Otto",         /*83*/
     "Batista",      /*84*/
     "Zohan",        /*85*/
-    "Léo",          /*86*/
+    "Leozinho",          /*86*/
     "Khalil",       /*87*/
     "Buda",         /*88*/
     "Kratos",       /*89*/
     "Antônio",      /*90*/
     "Xerxes",       /*91*/
-    "Farpas",       /*92*/
-    "Heitor",       /*93*/
+    "Thiaguinho",       /*92*/
+    "Andrey",       /*93*/
     "Oswaldo",      /*94*/
     "Maranhão",     /*95*/
     "Fillype",     /*96*/
-    "Wesley",       /*97*/
+    "Babilônico",       /*97*/
     "Pedro",        /*98*/
     "Juju"          /*99*/
 };
 
 char female_names[100][15] = {
-    "Azarzuela",   /*0*/
+    "Anitta",   /*0*/
     "Afrodite",    /*1*/
     "Amanda",      /*2*/
-    "Amélia",      /*3*/
+    "Madonna",      /*3*/
     "Ana",         /*4*/
-    "Beatriz",     /*5*/
-    "Bela",        /*6*/
+    "Betty",     /*5*/
+    "Bella",        /*6*/
     "Bernadete",   /*7*/
-    "Cássia",      /*8*/
+    "Carol",      /*8*/
     "Caterina",    /*9*/
-    "Clodete",     /*10*/
-    "Conceição",   /*11*/
-    "Consolação",  /*12*/
-    "Cilda",       /*13*/
-    "Cristina",    /*14*/
+    "Alice",     /*10*/
+    "Léia",   /*11*/
+    "Patrícia",  /*12*/
+    "Vanessa",       /*13*/
+    "Cris",    /*14*/
     "Dafne",       /*15*/
-    "Dalva",       /*16*/
+    "Nayara",       /*16*/
     "Denise",      /*17*/
-    "Donzélia",    /*18*/
-    "Donizete",    /*19*/
+    "Genaína",    /*18*/
+    "Carla",    /*19*/
     "Dolores",     /*20*/
     "Edna",        /*21*/
     "Elizabeth",   /*22*/
     "Érica",       /*23*/
-    "Fabiana",     /*24*/
+    "Clara",     /*24*/
     "Fátima",      /*25*/
-    "Flor",        /*26*/
-    "Francisca",   /*27*/
+    "Flores",        /*26*/
+    "Velma",   /*27*/
     "Gabi",        /*28*/
     "Gertrudes",   /*29*/
-    "Helga",       /*30*/
-    "Iolanda",     /*31*/
+    "Padmé",       /*30*/
+    "Rey",     /*31*/
     "Irina",       /*32*/
-    "Isolda",      /*33*/
-    "Ivânia",      /*34*/
+    "Emma Stone",      /*33*/
+    "Jennifer",      /*34*/
     "Jaqueline",   /*35*/
     "Joelma",      /*36*/
-    "Janice",      /*37*/
-    "Josefina",    /*38*/
+    "Scarllet",      /*37*/
+    "Alyson",    /*38*/
     "Jussara",     /*39*/
     "Luísa",       /*40*/
-    "Luiza",       /*41*/
+    "Arya",       /*41*/
     "Lana",        /*42*/
     "Karen",       /*43*/
     "Kátia",       /*44*/
@@ -203,26 +209,26 @@ char female_names[100][15] = {
     "Katarina",    /*46*/
     "Kyara",       /*47*/
     "Lisa",        /*48*/
-    "Madalena",    /*49*/
+    "Sarah Connor",    /*49*/
     "Maria",       /*50*/
-    "Manuela",     /*51*/
+    "Mulan",     /*51*/
     "Morgana",     /*52*/
     "Nádia",       /*53*/
     "Carolina",    /*54*/
     "Norma",       /*55*/
     "Nina",        /*56*/
-    "Odete",       /*57*/
-    "Olívia",      /*58*/
-    "Oriana",      /*59*/
-    "Paloma",      /*60*/
-    "Patrícia",    /*61*/
+    "Angelina Joeli",       /*57*/
+    "Anne Hathaway",      /*58*/
+    "Rihanna",      /*59*/
+    "Ygritte",      /*60*/
+    "Paty",    /*61*/
     "Penélope",    /*62*/
     "Priscila",    /*63*/
-    "Quirina",     /*64*/
+    "Uma Thurman",     /*64*/
     "Renata",      /*65*/
     "Rosa",        /*66*/
-    "Rosália",     /*67*/
-    "Ruth",        /*68*/
+    "Mia Wallace",     /*67*/
+    "Ellie",        /*68*/
     "Sofia",       /*69*/
     "Sabrina",     /*70*/
     "Xuxa",        /*71*/
@@ -230,27 +236,27 @@ char female_names[100][15] = {
     "Socorro",     /*73*/
     "Solange",     /*74*/
     "Susana",      /*75*/
-    "Susete",      /*76*/
-    "Tabita",      /*77*/
-    "Tamara",      /*78*/
+    "Daenerys",      /*76*/
+    "Lagertha",      /*77*/
+    "Bianca",      /*78*/
     "Terezinha",   /*79*/
-    "Úrsula",      /*80*/
-    "Ursulina",    /*81*/
-    "Valentina",   /*82*/
-    "Vitória",     /*83*/
+    "Padmé",      /*80*/
+    "Rapunzel",    /*81*/
+    "Vitória",   /*82*/
+    "Mariana",     /*83*/
     "Viviana",     /*84*/
     "Violeta",     /*85*/
     "Welwitschia", /*86*/
-    "Xênia",       /*87*/
-    "Yara",        /*88*/
+    "Jill Valentine",       /*87*/
+    "Fiona",        /*88*/
     "Yasmin",      /*89*/
     "Zahra",       /*90*/
     "Zulmira",     /*91*/
-    "Zuleica",     /*92*/
+    "Cersei",     /*92*/
     "Zoraida",     /*93*/
     "Dilma",       /*94*/
-    "Zeferina",    /*95*/
-    "Zoraya",      /*96*/
+    "Hermione",    /*95*/
+    "Elizabeth Swan",      /*96*/
     "Eliana",      /*97*/
     "Creusa",      /*98*/
     "Cremilda"     /*99*/
@@ -341,6 +347,9 @@ void initialize_castaways(){
     }
     cast_arg[i].name[j] = '\0';
   }
+
+  children_waiting = number_childrenfemale + number_childrenmale;
+  female_waiting = number_adultfemale;
 }
 
 void print_castaways(){
@@ -385,21 +394,48 @@ void print_castaways(){
   getchar();
 }
 
+/*
+Argumentos de cada Barco
+status = estado atual do barco (0 - resgatando, 1 - esperando na ilha , 2 - terminou resgate)
+*/
 void *boat_rescuing(void *arg){
   ptr_rescue_boat_arg rescue_boat_arg = (ptr_rescue_boat_arg)arg;
 
-  printf("Barco de Resgate %d: Pronto para o resgate!!\n", rescue_boat_arg->id);
-  while(rescue_boat_arg->status!=2){
-    printf("Barco de Resgate %d: Saindo do continente em direção a ilha\n", rescue_boat_arg->id);
+  while(rescue_boat_arg->status!=2 && number_alive != 0){
+    printf("\nBarco de Resgate %d: Saindo do continente em direção a ilha\n\n", rescue_boat_arg->id);
     sleep(15);
-    printf("Barco de Resgate %d: Cheguei na ilha, esperando náufragos subirem no barco...\n", rescue_boat_arg->id);
-
-    printf("Barco de Resgate %d: Levando náufragos ao continente!\n", rescue_boat_arg->id);
-    sleep(15);
+    boat_waiting = TRUE;
+    rescue_boat_arg->status = 1;
+    if(number_alive == 0){
+      printf("\nBarco de Resgate %d: Cheguei na ilha, mas infelizmente não existe mais ninguém aqui\n\n", rescue_boat_arg->id);
+      sleep(2);
+    }
+    else{
+      printf("\nBarco de Resgate %d: Cheguei na ilha, esperando náufragos subirem no barco...\n\n", rescue_boat_arg->id);
+    }
+    sem_wait(&wait_boat);
+    printf("\nBarco de Resgate %d: Voltando ao continente!\n\n", rescue_boat_arg->id);
+    if(number_alive == 0){
+      rescue_boat_arg->status = 2;
+    }
+    else{
+      rescue_boat_arg->status = 0;
+      sleep(15);
+      printf("\nBarco de Resgate %d: Cheguei no continente, descarregando os náufragos em segurança!\n\n", rescue_boat_arg->id);
+      sleep(2);
+    }
   }
   pthread_exit(0);
 }
 
+void remove_waiting(int sex){
+  if(sex == 1){
+    female_waiting--;
+  }
+  else if(sex == 2 || sex == 3){
+    children_waiting--;
+  }
+}
 
 int kill_someone(int id){
   int someone = rand() % CASTAWAYS;
@@ -410,7 +446,9 @@ int kill_someone(int id){
     if(cast_arg[i].status == 0){
       if(cast_arg[i].id != id){
         found = 1;
+        number_alive--;
         cast_arg[i].status = 2;
+        remove_waiting(cast_arg[i].sex);
         found_id = cast_arg[i].id;
         break;
       }
@@ -420,7 +458,9 @@ int kill_someone(int id){
     for(i = 0; i < someone; i++){
       if(cast_arg[i].status == 0){
         if(cast_arg[i].id != id){
+          number_alive--;
           cast_arg[i].status = 2;
+          remove_waiting(cast_arg[i].sex);
           found_id = cast_arg[i].id;
           break;
         }
@@ -430,15 +470,146 @@ int kill_someone(int id){
   return found_id;
 }
 
+void children_castaway(ptr_castaway_arg castaway_arg){
+
+  pthread_mutex_lock(&l);
+  if(castaway_arg->status == 0){
+    if(boat_waiting){
+      printf("Náufrago %d (%s - CRIANÇA): Estou na fila do barco!\n", castaway_arg->id, castaway_arg->name);
+      sleep(1);
+      capacity--;
+      number_alive--;
+      castaway_arg->status = 1;
+      remove_waiting(castaway_arg->sex);
+      printf("Náufrago %d (%s - CRIANÇA): Entrei no barco, estou salvo! -- restam %d vagas no barco\n", castaway_arg->id, castaway_arg->name, capacity);
+      if(capacity == 0){
+        boat_waiting = FALSE;
+        capacity = BOAT_CAPACITY;
+        printf("Náufrago %d (%s - CRIANÇA): Galera... o barco lotou\n", castaway_arg->id, castaway_arg->name);
+        sem_post(&wait_boat);
+      }
+      else if(number_alive == 0){
+        boat_waiting = FALSE;
+        printf("Não restam náufragos na ilha\n");
+        sem_post(&wait_boat);
+      }
+      pthread_cond_broadcast(&cm);
+      pthread_cond_broadcast(&cw);
+    }
+  }
+  pthread_mutex_unlock(&l);
+}
+
+void woman_castaway(ptr_castaway_arg castaway_arg){
+
+  pthread_mutex_lock(&l);
+  if(castaway_arg->status == 0){
+    if(boat_waiting){
+      printf("Náufrago %d (%s - MULHER): Estou na fila do barco!\n", castaway_arg->id, castaway_arg->name);
+      sleep(1);
+    }
+    while (children_waiting > 0 && boat_waiting){
+      pthread_cond_wait(&cw, &l);
+    }
+
+    if(boat_waiting){
+      capacity--;
+      number_alive--;
+      castaway_arg->status = 1;
+      remove_waiting(castaway_arg->sex);
+      printf("Náufrago %d (%s - MULHER): Entrei no barco, estou salvo! -- restam %d vagas no barco\n", castaway_arg->id, castaway_arg->name, capacity);
+      if(capacity == 0){
+        boat_waiting = FALSE;
+        capacity = BOAT_CAPACITY;
+        printf("Náufrago %d (%s - MULHER): Galera... o barco lotou\n", castaway_arg->id, castaway_arg->name);
+        sem_post(&wait_boat);
+      }
+      else if(number_alive == 0){
+        boat_waiting = FALSE;
+        printf("Não restam náufragos na ilha\n");
+        sem_post(&wait_boat);
+      }
+      pthread_cond_broadcast(&cm);
+      pthread_cond_broadcast(&cw);
+    }
+  }
+  pthread_mutex_unlock(&l);
+}
+
+void man_castaway(ptr_castaway_arg castaway_arg){
+
+  pthread_mutex_lock(&l);
+  if(castaway_arg->status == 0){
+    if(boat_waiting){
+      printf("Náufrago %d (%s - HOMEM): Estou na fila do barco!\n", castaway_arg->id, castaway_arg->name);
+      sleep(1);
+    }
+    while ((children_waiting > 0 || female_waiting > 0) && boat_waiting){
+      pthread_cond_wait(&cm, &l);
+    }
+
+    if(boat_waiting){
+      capacity--;
+      number_alive--;
+      castaway_arg->status = 1;
+      remove_waiting(castaway_arg->sex);
+      printf("Náufrago %d (%s - HOMEM): Entrei no barco, estou salvo! -- restam %d vagas no barco\n", castaway_arg->id, castaway_arg->name, capacity);
+      if(capacity == 0){
+        boat_waiting = FALSE;
+        capacity = BOAT_CAPACITY;
+        printf("Náufrago %d (%s - HOMEM): Galera... o barco lotou\n" , castaway_arg->id, castaway_arg->name);
+        sem_post(&wait_boat);
+      }
+      else if(number_alive == 0){
+        boat_waiting = FALSE;
+        printf("Não restam náufragos na ilha\n");
+        sem_post(&wait_boat);
+      }
+      pthread_cond_broadcast(&cm);
+      pthread_cond_broadcast(&cw);
+    }
+  }
+  pthread_mutex_unlock(&l);
+}
+
+/*
+Seguindo os indices:
+i = estado atual do naufrago (0 - naufragado, 1 - resgatado , 2 - morto por outro naufrago, 3 - morto de fome)
+i + 1 = sexo e idade do naufrago (0 - Homem Adulto, 1 - Mulher Adulta, 2 - Homem Criança, 3 - Mulher Criança)
+i + 2 = numero entre 0 e 99 equivalente ao seu nome 
+*/
 void *surviving(void *arg) {
   ptr_castaway_arg castaway_arg = (ptr_castaway_arg)arg;
 
   while(castaway_arg->status == 0){
-    pthread_mutex_lock(&l);
-    while(comida == 0){
-      pthread_cond_wait(&cn, &l);
+
+    /* Náufragos esperando para subir no barco */
+    if(boat_waiting){
+      switch (castaway_arg->sex){
+        case 0:
+          man_castaway(castaway_arg);
+          break;
+
+        case 1:
+          woman_castaway(castaway_arg);
+          break;
+
+        case 2:
+          children_castaway(castaway_arg);
+          break;
+
+        case 3:
+          children_castaway(castaway_arg);
+          break;
+
+        default:
+          break;
+      }
     }
-    if(castaway_arg->status == 0){
+
+    /* Náufragos comendo e se matando */
+    pthread_mutex_lock(&l);
+    if(castaway_arg->status == 0 && !boat_waiting){
       printf("Náufrago %d (%s): Vou comer... ainda existem %d porções de comida\n", castaway_arg->id, castaway_arg->name, comida);
       sleep(1);
       comida-=EAT;
@@ -447,16 +618,23 @@ void *surviving(void *arg) {
         id_kill = kill_someone(castaway_arg->id);
         if(id_kill == castaway_arg->id){
           printf("Infelizmente, não tem mais ninguém...\n");
+          number_alive--;
           castaway_arg->status = 3;
+          remove_waiting(castaway_arg->sex);
+          sem_post(&wait_boat);
+          boat_waiting = FALSE;
+          sleep(2);
+          printf("Náufrago %d (%s) morreu de fome!\n", castaway_arg->id, castaway_arg->name);
         }
         else{
-          printf("Náufrago %d (%s) foi morto por Náufrago %d (%s)... conseguiu-se %d porções de comida a mais\n", cast_arg[id_kill].id, cast_arg[id_kill].name, castaway_arg->id, castaway_arg->name, HUMAN_FOOD);
+          printf("Náufrago %d (%s) foi morto por Náufrago %d (%s)... conseguiu-se %d porções de comida a mais!\n", cast_arg[id_kill].id, cast_arg[id_kill].name, castaway_arg->id, castaway_arg->name, HUMAN_FOOD);
           comida += HUMAN_FOOD;
         }
       }
     }
+
     pthread_mutex_unlock(&l);
-    sleep(2);
+    sleep(1);
   }
   pthread_exit(0);
 }
@@ -471,6 +649,10 @@ void initialize_food(){
 
 int shipwreck(){
   int i;
+
+  number_alive = CASTAWAYS;
+  capacity = BOAT_CAPACITY;
+  boat_waiting = FALSE;
 
   printf("-------------------------\n");
   printf("\nACIDENTE!!!!!\n\n");
@@ -487,15 +669,15 @@ int shipwreck(){
     pthread_create(&castaway[i], NULL, surviving, (void *)(&(cast_arg[i])));
   }
 
-  for(i = 0; i < BOATS; i++){
-    boat_arg[i].id = i;
-    boat_arg[i].status = 0;
-    pthread_create(&boat[i], NULL, boat_rescuing, (void *)(&(boat_arg[i])));
-  }
+  boat_arg.id = 0;
+  boat_arg.status = 0;
+  pthread_create(&boat, NULL, boat_rescuing, (void *)(&(boat_arg)));
 
   for (i = 0; i < CASTAWAYS; i++){
     pthread_join(castaway[i], NULL);
   }
+  
+  pthread_join(boat, NULL);
 
   print_castaways();
 
@@ -505,6 +687,8 @@ int shipwreck(){
 int main(){
   int continue_simulation = TRUE;
   char input;
+
+  sem_init(&wait_boat, 0, 0);
 
   printf("-------------------------\n");
   printf("\nCASTAWAY PROBLEM\n\n");
