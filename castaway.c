@@ -80,7 +80,7 @@ char male_names[100][15] = {
     "Dante",          /*15*/
     "Rodrigo Chaves", /*16*/
     "Daniel",         /*17*/
-    "Diego",          /*18*/
+    "Diegod",         /*18*/
     "Tom Hanks",      /*19*/
     "Allison",        /*20*/
     "Fagner",         /*21*/
@@ -173,7 +173,7 @@ char female_names[100][15] = {
     "Amanda",         /*2*/
     "Madonna",        /*3*/
     "Ana",            /*4*/
-    "Betty",          /*5*/
+    "Rebbeca",        /*5*/
     "Bella",          /*6*/
     "Bernadete",      /*7*/
     "Carol",          /*8*/
