@@ -81,7 +81,7 @@ char male_names[100][15] = {
     "Rodrigo Chaves", /*16*/
     "Daniel",         /*17*/
     "Diego",          /*18*/
-    "Edu",            /*19*/
+    "Tom Hanks",      /*19*/
     "Allison",        /*20*/
     "Fagner",         /*21*/
     "Fred",           /*22*/
@@ -117,7 +117,7 @@ char male_names[100][15] = {
     "Struct",         /*52*/
     "Tuts",           /*53*/
     "Thaleco",        /*54*/
-    "Thomas",         /*55*/
+    "Wilson",         /*55*/
     "Uriel",          /*56*/
     "Naves",          /*57*/
     "Vitor Pontes",   /*58*/
