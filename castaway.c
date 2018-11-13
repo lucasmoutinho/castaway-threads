@@ -67,26 +67,26 @@ char male_names[100][15] = {
     "Almeida",        /*2*/
     "Giamps",         /*3*/
     "Abraão",         /*4*/
-    "Apolo",          /*5*/
+    "Ladeira",        /*5*/
     "Daniels",        /*6*/
     "Dé",             /*7*/
     "Diogo",          /*8*/
     "Batman",         /*9*/
-    "Carvalho",       /*10*/
+    "Samurouts",      /*10*/
     "Cláudio",        /*11*/
-    "César",          /*12*/
+    "Vidal",          /*12*/
     "Jadiel",         /*13*/
     "Cabrinha",       /*14*/
     "Dante",          /*15*/
     "Rodrigo Chaves", /*16*/
-    "Daniel",         /*17*/
+    "Moutres",        /*17*/
     "Diegod",         /*18*/
     "Tom Hanks",      /*19*/
     "Allison",        /*20*/
     "Fagner",         /*21*/
     "Fred",           /*22*/
     "Geraldo",        /*23*/
-    "Gonzaga",        /*24*/
+    "Silvio Santos",  /*24*/
     "Galvão",         /*25*/
     "Capoeira",       /*26*/
     "Kipman",         /*27*/
@@ -97,7 +97,7 @@ char male_names[100][15] = {
     "Rodolfo",        /*32*/
     "Jarbas",         /*33*/
     "Kevin",          /*34*/
-    "Lucas",          /*35*/
+    "Lucão",          /*35*/
     "Jureg",          /*36*/
     "Mesquita",       /*37*/
     "Marco Véi",      /*38*/
@@ -107,7 +107,7 @@ char male_names[100][15] = {
     "Billy",          /*42*/
     "Ribas",          /*43*/
     "Nicholas",       /*44*/
-    "Otávio",         /*45*/
+    "Nichobolas",     /*45*/
     "Perotto",        /*46*/
     "Sodré",          /*47*/
     "Renato",         /*48*/
@@ -121,20 +121,20 @@ char male_names[100][15] = {
     "Uriel",          /*56*/
     "Naves",          /*57*/
     "Vitor Pontes",   /*58*/
-    "Xavier",         /*59*/
+    "Xotex",          /*59*/
     "Santaguida",     /*60*/
     "Soneca",         /*61*/
     "Jesus",          /*62*/
     "Yan",            /*63*/
     "Yamin",          /*64*/
-    "Xonas",          /*65*/
+    "Rofl",           /*65*/
     "Vinícius",       /*66*/
     "Vasconcelos",    /*67*/
     "Zacarias",       /*68*/
     "Moutinho",       /*69*/
     "Ximenes",        /*70*/
     "João Gabriel",   /*71*/
-    "Zanina",         /*72*/
+    "Porto",          /*72*/
     "Bruno Helder",   /*73*/
     "Alchieri",       /*74*/
     "Davi",           /*75*/
@@ -144,7 +144,7 @@ char male_names[100][15] = {
     "Mafra",          /*79*/
     "Tiago Cabral",   /*80*/
     "Alex Souza",     /*81*/
-    "Caio",           /*82*/
+    "Caieras",        /*82*/
     "Otto",           /*83*/
     "Batista",        /*84*/
     "Zohan",          /*85*/
@@ -153,7 +153,7 @@ char male_names[100][15] = {
     "Buda",           /*88*/
     "Kratos",         /*89*/
     "Antônio",        /*90*/
-    "Xerxes",         /*91*/
+    "Shikusu",        /*91*/
     "Thiaguinho",     /*92*/
     "Andrey",         /*93*/
     "Oswaldo",        /*94*/
@@ -177,11 +177,11 @@ char female_names[100][15] = {
     "Bella",          /*6*/
     "Bernadete",      /*7*/
     "Carol",          /*8*/
-    "Caterina",       /*9*/
+    "Cremosa",        /*9*/
     "Alice",          /*10*/
     "Léia",           /*11*/
     "Patrícia",       /*12*/
-    "Vanessa",        /*13*/
+    "Débora",         /*13*/
     "Cris",           /*14*/
     "Dafne",          /*15*/
     "Nayara",         /*16*/
@@ -201,12 +201,12 @@ char female_names[100][15] = {
     "Padmé",          /*30*/
     "Rey",            /*31*/
     "Irina",          /*32*/
-    "Emma Stone",     /*33*/
+    "Emma",           /*33*/
     "Jennifer",       /*34*/
     "Jaqueline",      /*35*/
     "Joelma",         /*36*/
     "Scarllet",       /*37*/
-    "Alyson",         /*38*/
+    "Jandáia",        /*38*/
     "Jussara",        /*39*/
     "Luísa",          /*40*/
     "Arya",           /*41*/
@@ -216,23 +216,23 @@ char female_names[100][15] = {
     "Kelly",          /*45*/
     "Katarina",       /*46*/
     "Kyara",          /*47*/
-    "Lisa",           /*48*/
-    "Sarah Connor",   /*49*/
+    "Focátia",        /*48*/
+    "Sarah",          /*49*/
     "Maria",          /*50*/
     "Mulan",          /*51*/
     "Morgana",        /*52*/
     "Nádia",          /*53*/
     "Carolina",       /*54*/
     "Norma",          /*55*/
-    "Nina",           /*56*/
-    "Angelina Joeli", /*57*/
-    "Anne Hathaway",  /*58*/
+    "Rapunzel",       /*56*/
+    "Angelina",       /*57*/
+    "Madalena",       /*58*/
     "Rihanna",        /*59*/
     "Ygritte",        /*60*/
     "Paty",           /*61*/
     "Penélope",       /*62*/
     "Priscila",       /*63*/
-    "Uma Thurman",    /*64*/
+    "Andrômeda",      /*64*/
     "Renata",         /*65*/
     "Rosa",           /*66*/
     "Mia Wallace",    /*67*/
@@ -264,7 +264,7 @@ char female_names[100][15] = {
     "Zoraida",        /*93*/
     "Dilma",          /*94*/
     "Hermione",       /*95*/
-    "Elizabeth Swan", /*96*/
+    "Alcione",        /*96*/
     "Eliana",         /*97*/
     "Creusa",         /*98*/
     "Cremilda"        /*99*/
