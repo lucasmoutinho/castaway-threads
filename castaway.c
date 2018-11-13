@@ -57,6 +57,7 @@ int children_waiting, female_waiting, boat_waiting;                             
 int number_alive = CASTAWAYS;                                                         /* Número de Náufragos vivos na ilha */
 int capacity = BOAT_CAPACITY;                                                         /* Número de vagas restantes no barco */
 int id_kill;                                                                          /* ID do Náufrago que morreu */
+int used_male_names[100], used_female_names[100];                                     /* Vetor de nomes usados */
 
 /*
 Lista de nomes masculinos
@@ -304,6 +305,15 @@ void print_status(int status){
   }
 }
 
+void initialize_used_names(){
+  int i;
+
+  for(i = 0; i < 100; i++){
+    used_female_names[i] = 0;
+    used_male_names[i] = 0;
+  }
+}
+
 /*
 Seguindo os indices:
 i = estado atual do naufrago (0 - naufragado, 1 - resgatado , 2 - morto por outro naufrago, 3 - morto de fome)
@@ -320,6 +330,7 @@ void initialize_castaways(){
   number_adultmale = 0;
   number_childrenfemale = 0;
   number_childrenmale = 0;
+  initialize_used_names();
 
   srand(time(NULL));
 
@@ -350,16 +361,24 @@ void initialize_castaways(){
     name = (rand() % 100);
     j = 0;
     if(cast_arg[i].sex == 0 || cast_arg[i].sex == 2){
+      while(used_male_names[name] == 1){
+        name = (rand() % 100);
+      }
       while(male_names[name][j] != '\0'){
         cast_arg[i].name[j] = male_names[name][j];
         j++;
       }
+      used_male_names[name] = 1;
     }
     else{
+      while(used_female_names[name] == 1){
+        name = (rand() % 100);
+      }
       while(female_names[name][j] != '\0'){
         cast_arg[i].name[j] = female_names[name][j];
         j++;
       }
+      used_female_names[name] = 1;
     }
     cast_arg[i].name[j] = '\0';
   }
