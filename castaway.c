@@ -582,7 +582,7 @@ void print_castaways(int mode){
     /* O primeiro a matar */
     if(first_killer != -1){
       printf("Primeiro a matar - ");
-      printf(COLOR_BRIGHT_RED "Quero ver o cirgo pegar fogo: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[first_killer].id, cast_arg[first_killer].name);
+      printf(COLOR_BRIGHT_RED "Quero ver o circo pegar fogo: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[first_killer].id, cast_arg[first_killer].name);
       cast_arg[first_killer].mvp++;
     }
 
