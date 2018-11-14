@@ -595,12 +595,29 @@ void print_castaways(int mode){
     
     /* O que mais matou */
     top = top_kills();
+    found = FALSE;
     if(top > 0){
       printf("O náufrago que mais matou - ");
       printf(COLOR_BRIGHT_RED "Só na facadinha! (%d Mortes): ", top);
       for(i = 0; i < length; i++){
         if(cast_arg[i].kills == top){
           printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
+          cast_arg[i].mvp++;
+        }
+        if(cast_arg[i].kills > 0 && cast_arg[i].eaten == 0){
+          found = TRUE;
+        }
+      }
+      printf("\n" COLOR_RESET);
+    }
+
+    /* Matou, mas não comeu ninguém */
+    if(found){
+      printf("Matou uma galera, mas não comeu ninguém - ");
+      printf(COLOR_BRIGHT_MAGENTA "O Serial Killer Vegano: ");
+      for(i = 0; i < length; i++){
+        if(cast_arg[i].kills > 0 && cast_arg[i].eaten == 0){
+          printf("-- Náufrago %d (%s - %d mortes) -- ", cast_arg[i].id, cast_arg[i].name, cast_arg[i].kills);
           cast_arg[i].mvp++;
         }
       }
@@ -636,6 +653,7 @@ void print_castaways(int mode){
     }
 
     /* O que mais comeu */
+    found = FALSE;
     top = top_eaten();
     if(top > 0){
       printf("O que mais comeu - ");
@@ -851,6 +869,9 @@ void easter_egg_printer(int dead_id, int killer_id){
   }
   else if(strcmp(cast_arg[dead_id].name, "Wilson") == 0){
     printf(COLOR_BRIGHT_YELLOW "WILLLSOOOONNNN!\n" COLOR_RESET);
+  }
+  else if(strcmp(cast_arg[dead_id].name, "Kratos") == 0){
+    printf(COLOR_BRIGHT_YELLOW "BOYYYYYY!\n" COLOR_RESET);
   }
 }
 
