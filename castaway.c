@@ -17,7 +17,7 @@ Bibliotecas
 
 #define TRUE 1          /* verdadeiro */
 #define FALSE 0         /* falso */
-#define CASTAWAYS 100   /* Número inicial de Náufragos na ilha */
+#define CASTAWAYS 20    /* Número inicial de Náufragos na ilha */
 #define HUMAN_FOOD 200  /* Quantidade de porções que um Náufrago morto adulto gera */
 #define KID_FOOD 100    /* Quantidade de porções que um Náufrago morto criança gera */
 #define EAT 20          /* Quantidade de porções comidas por vez por cada náufrago */
@@ -52,8 +52,11 @@ typedef struct{
   int status;
   int sex;
   char name[15];
+  
   int xuxa;
   int kills;
+  int eaten;
+  int line;
 } castaway_arg, *ptr_castaway_arg;
 
 /*
@@ -80,7 +83,7 @@ int number_alive = CASTAWAYS;                                                   
 int capacity = BOAT_CAPACITY;                                                         /* Número de vagas restantes no barco */
 int id_kill;                                                                          /* ID do Náufrago que morreu */
 int used_male_names[100], used_female_names[100];                                     /* Vetor de nomes usados */
-int oac, first_left, last_standing;                                                   /* ID para as Variáveis de conquista */
+int oac, pc, first_left, last_standing, first_blood, first_killer, almost, peace;     /* ID para as Variáveis de conquista */
 
 /*
 Lista de nomes masculinos
@@ -298,7 +301,7 @@ char female_names[100][15] = {
 Função para limpar a tela do terminal
 */
 void clrscr(){
-  system("@cls||clear");
+  system("clear");
 }
 
 /*
@@ -363,6 +366,8 @@ void initialize_castaways(){
     cast_arg[i].sex = (rand() % 4);
     cast_arg[i].kills = 0;
     cast_arg[i].xuxa = 0;
+    cast_arg[i].eaten = 0;
+    cast_arg[i].line = 0;
     switch (cast_arg[i].sex){
       case 0:
         number_adultmale++;
@@ -445,12 +450,76 @@ int top_kills(){
 }
 
 /*
+Retorna o número máximo de mortes feitos por uma criança
+*/
+int top_kid_kills(){
+  int top = -1;
+  int i;
+  int length = CASTAWAYS;
+
+  for(i = 0; i < length; i++){
+    if(cast_arg[i].kills > top && (cast_arg[i].sex == 2 || cast_arg[i].sex == 3)){
+      top = cast_arg[i].kills;
+    }
+  }
+  return top;
+}
+
+/*
+Retorna o número máximo de porções comidas
+*/
+int top_eaten(){
+  int top = -1;
+  int i;
+  int length = CASTAWAYS;
+
+  for(i = 0; i < length; i++){
+    if(cast_arg[i].eaten > top){
+      top = cast_arg[i].eaten;
+    }
+  }
+  return top;
+}
+
+/*
+Retorna o número mínimo de porções comidas
+*/
+int min_eaten(){
+  int i;
+  int length = CASTAWAYS;
+  int min = cast_arg[0].eaten;
+
+  for(i = 0; i < length; i++){
+    if(cast_arg[i].eaten < min){
+      min = cast_arg[i].eaten;
+    }
+  }
+  return min;
+}
+
+/*
+Retorna o número máximo de vezes entrado na fila de espera do barco
+*/
+int top_line(){
+  int top = -1;
+  int i;
+  int length = CASTAWAYS;
+
+  for(i = 0; i < length; i++){
+    if(cast_arg[i].line > top){
+      top = cast_arg[i].line;
+    }
+  }
+  return top;
+}
+
+/*
 Função para imprimir na tela a lista de náufragos
 Caso o modo seja 1, imprime uma lista de conquistas
 */
 void print_castaways(int mode){
   int length = CASTAWAYS;
-  int i, top;
+  int i, top, min;
 
   printf(COLOR_BRIGHT_CYAN "-------------------------\n");
   printf("LISTA DOS NÁUFRAGOS\n\n" COLOR_RESET);
@@ -486,21 +555,38 @@ void print_castaways(int mode){
   }
   printf(COLOR_BRIGHT_CYAN "-------------------------\n\n" COLOR_RESET);
 
+  printf("\n\nPRESSIONE ENTER PARA CONTINUAR\n");
+  getchar();
+
   if(mode){
     printf("\n\n");
-    printf(COLOR_BRIGHT_MAGENTA "ACHIEVEMENTS (CONQUISTAS):\n\n\n" COLOR_RESET);
+    printf(COLOR_BRIGHT_YELLOW "***********" COLOR_RESET);
+    printf(" ACHIEVEMENTS (CONQUISTAS) ");
+    printf(COLOR_BRIGHT_YELLOW "***********\n\n\n" COLOR_RESET);
 
+    /* O primeiro a entrar no barco */
     if(first_left != -1){
-      printf(COLOR_BRIGHT_CYAN "- O Precoce: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[first_left].id, cast_arg[first_left].name);
+      printf("Primeiro a entrar no barco - ");
+      printf(COLOR_BRIGHT_CYAN "O Precoce: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[first_left].id, cast_arg[first_left].name);
     }
 
-    if(last_standing != -1){
-      printf(COLOR_BRIGHT_GREEN "- Last Man Standing: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[last_standing].id, cast_arg[last_standing].name);
+    /* O primeiro a matar */
+    if(first_killer != -1){
+      printf("Primeiro a matar - ");
+      printf(COLOR_BRIGHT_RED "Aquele que só quer ver o cirgo pegar fogo: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[first_killer].id, cast_arg[first_killer].name);
     }
 
+    /* O primeiro a morrer */
+    if(first_blood != -1){
+      printf("Primeiro a morrer - ");
+      printf(COLOR_BRIGHT_CYAN "Sou contra!: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[first_blood].id, cast_arg[first_blood].name);
+    }
+    
+    /* O que mais matou */
     top = top_kills();
     if(top > 0){
-      printf(COLOR_BRIGHT_RED "- Canibal enrustido (%d): ", top);
+      printf("O que mais matou (MVP) - ");
+      printf(COLOR_BRIGHT_RED "Só na facadinha! (%d Mortes): ", top);
       for(i = 0; i < length; i++){
         if(cast_arg[i].kills == top){
           printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
@@ -509,9 +595,24 @@ void print_castaways(int mode){
       printf("\n" COLOR_RESET);
     }
 
+    /* Criança que mais matou */
+    top = top_kid_kills();
+    if(top > 0){
+      printf("Criança que mais matou - ");
+      printf(COLOR_BRIGHT_YELLOW "Aquele sobrinho bizarro! (%d Mortes): ", top);
+      for(i = 0; i < length; i++){
+        if(cast_arg[i].kills == top && (cast_arg[i].sex == 2 || cast_arg[i].sex == 3)){
+          printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
+        }
+      }
+      printf("\n" COLOR_RESET);
+    }
+
+    /* O que mais matou crianças */
     top = top_xuxa();
     if(top > 0){
-      printf(COLOR_BRIGHT_MAGENTA "- Rainha dos baixinhos (%d): ", top);
+      printf("O que mais matou crianças - ");
+      printf(COLOR_BRIGHT_MAGENTA "Rainha dos baixinhos! (%d Mortes): ", top);
       for(i = 0; i < length; i++){
         if(cast_arg[i].xuxa == top){
           printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
@@ -520,22 +621,78 @@ void print_castaways(int mode){
       printf("\n" COLOR_RESET);
     }
 
-    if(oac != -1){
-      printf(COLOR_BRIGHT_YELLOW "- Odeio OAC: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[oac].id, cast_arg[oac].name);
+    /* O que mais comeu */
+    top = top_eaten();
+    if(top > 0){
+      printf("O que mais comeu - ");
+      printf(COLOR_BRIGHT_YELLOW "O canibal enrustido (%d Porções): ", top);
+      for(i = 0; i < length; i++){
+        if(cast_arg[i].eaten == top){
+          printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
+        }
+      }
+      printf("\n" COLOR_RESET);
     }
 
-    /*
-    primeiro que morre - otario
-    primeiro que mata - o pistola
-    criança que mais matou - o chuck
-    aquele náufrago que ninguem gosta - o que menos conseguiu subir no barco
-    */
+    /* O que menos comeu */
+    min = min_eaten();
+    if(top > 0){
+      printf("O que menos comeu - ");
+      printf(COLOR_BRIGHT_CYAN "To de boas desse rolê... (%d Porções): ", min);
+      for(i = 0; i < length; i++){
+        if(cast_arg[i].eaten == min){
+          printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
+        }
+      }
+      printf("\n" COLOR_RESET);
+    }
 
-    printf("\n");
+    /* O que mais entrou na fila antes de ser resgatado ou morto*/
+    top = top_line();
+    if(top > 0){
+      printf("O que entrou na fila mais vezes antes de ser resgatado ou morto - ");
+      printf(COLOR_BRIGHT_MAGENTA "O bicho mais rejeitado (%d Tentativas): ", top);
+      for(i = 0; i < length; i++){
+        if(cast_arg[i].line == top){
+          printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
+        }
+      }
+      printf("\n" COLOR_RESET);
+    }
+
+    /* Quem matou o Vidal */
+    if(oac != -1){
+      printf("Matou o Vidal - ");
+      printf(COLOR_BRIGHT_CYAN "Odeio OAC: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[oac].id, cast_arg[oac].name);
+    }
+
+    /* Quem matou o Alchieri */
+    if(pc != -1){
+      printf("Matou o Alchieri - ");
+      printf(COLOR_BRIGHT_YELLOW "O moleque que reprovou PC: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[pc].id, cast_arg[pc].name);
+    }
+
+    /* Foi resgatado logo antes de morrer de fome */
+    if(almost){
+      printf("Foi resgatado logo antes de morrer de fome - ");
+      printf(COLOR_BRIGHT_GREEN "Aquela Cagada Matinal!: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[last_standing].id, cast_arg[last_standing].name);
+    }
+
+    /* Foi resgatado logo antes de morrer de fome */
+    if(peace){
+      printf("Foi o último a ser resgatado, não matou e não comeu ninguém - ");
+      printf(COLOR_BRIGHT_CYAN "O Maior de todos os Santos: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[last_standing].id, cast_arg[last_standing].name);
+    }
+
+    /* O último a sair da ilha (vivo ou morto) */
+    if(last_standing != -1){
+      printf("O Último a sair da ilha (vivo ou morto) - ");
+      printf(COLOR_BRIGHT_GREEN "Last Man Standing: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[last_standing].id, cast_arg[last_standing].name);
+    }
+
+    printf("\n\nPRESSIONE ENTER PARA CONTINUAR\n");
+    getchar();
   }
-
-  printf("\n\nPRESSIONE ENTER PARA CONTINUAR\n");
-  getchar();
 }
 
 /*
@@ -587,6 +744,35 @@ void remove_waiting(int sex){
 }
 
 /*
+Função para printar mensagens de easter egg
+*/
+void easter_egg_printer(int dead_id, int killer_id){
+  if(first_blood == -1){
+    first_blood = dead_id;
+  }
+  if(first_killer == -1){
+    first_killer = killer_id;
+  }
+  if(dead_id != killer_id){
+    if(strcmp(cast_arg[dead_id].name, "Vidal") == 0){
+      oac = killer_id;
+    }
+    else if(strcmp(cast_arg[dead_id].name, "Alchieri") == 0){
+      pc = killer_id;
+    }
+  }
+  if(strcmp(cast_arg[dead_id].name, "Alcione") == 0){
+    printf(COLOR_BRIGHT_YELLOW "Mas tem que me prender! TEEEEEMMM que seduziirrr!\n" COLOR_RESET);
+  }
+  else if(strcmp(cast_arg[dead_id].name, "Focátia") == 0){
+    printf(COLOR_BRIGHT_YELLOW "Vai lá e faz!\n" COLOR_RESET);
+  }
+  else if(strcmp(cast_arg[dead_id].name, "Cabrinha") == 0){
+    printf(COLOR_BRIGHT_YELLOW "Béééé!\n" COLOR_RESET);
+  }
+}
+
+/*
 Função para escolher um náufrago restante na ilha randomicamente e matá-lo 
 */
 int kill_someone(int id){
@@ -606,9 +792,6 @@ int kill_someone(int id){
         if(cast_arg[i].sex == 2 || cast_arg[i].sex == 3){
           cast_arg[id].xuxa++;
         }
-        if(strcmp(cast_arg[i].name, "Vidal") == 0){
-          oac = id;
-        }
         break;
       }
     }
@@ -624,9 +807,6 @@ int kill_someone(int id){
           cast_arg[id].kills++;
           if(cast_arg[i].sex == 2 || cast_arg[i].sex == 3){
             cast_arg[id].xuxa++;
-          }
-          if(strcmp(cast_arg[i].name, "Vidal") == 0){
-            oac = id;
           }
           break;
         }
@@ -645,6 +825,7 @@ void children_castaway(ptr_castaway_arg castaway_arg){
   if(castaway_arg->status == 0){
     if(boat_waiting){
       printf(COLOR_BRIGHT_YELLOW "Náufrago %d (%s - CRIANÇA): Estou na fila do barco!\n" COLOR_RESET, castaway_arg->id, castaway_arg->name);
+      castaway_arg->line++;
       sleep(1);
       capacity--;
       number_alive--;
@@ -660,6 +841,9 @@ void children_castaway(ptr_castaway_arg castaway_arg){
         printf(COLOR_BRIGHT_MAGENTA "Náufrago %d (%s - CRIANÇA): Galera... o barco lotou\n" COLOR_RESET, castaway_arg->id, castaway_arg->name);
         if(number_alive == 0){
           last_standing = castaway_arg->id;
+          if(castaway_arg->kills == 0 && castaway_arg->eaten == 0){
+            peace = TRUE;
+          }
         }
         sem_post(&wait_boat);
       }
@@ -667,6 +851,12 @@ void children_castaway(ptr_castaway_arg castaway_arg){
         boat_waiting = FALSE;
         printf(COLOR_BRIGHT_MAGENTA "Não restam náufragos na ilha\n" COLOR_RESET);
         last_standing = castaway_arg->id;
+        if(castaway_arg->kills == 0 && castaway_arg->eaten == 0){
+          peace = TRUE;
+        }
+        if(capacity == BOAT_CAPACITY-1){
+          almost = TRUE;
+        }
         sem_post(&wait_boat);
       }
       pthread_cond_broadcast(&cm);
@@ -685,6 +875,7 @@ void woman_castaway(ptr_castaway_arg castaway_arg){
   if(castaway_arg->status == 0){
     if(boat_waiting){
       printf(COLOR_BRIGHT_YELLOW "Náufrago %d (%s - MULHER): Estou na fila do barco!\n" COLOR_RESET, castaway_arg->id, castaway_arg->name);
+      castaway_arg->line++;
       sleep(1);
     }
     while (children_waiting > 0 && boat_waiting){
@@ -706,6 +897,9 @@ void woman_castaway(ptr_castaway_arg castaway_arg){
         printf(COLOR_BRIGHT_MAGENTA "Náufrago %d (%s - MULHER): Galera... o barco lotou\n" COLOR_RESET, castaway_arg->id, castaway_arg->name);
         if(number_alive == 0){
           last_standing = castaway_arg->id;
+          if(castaway_arg->kills == 0 && castaway_arg->eaten == 0){
+            peace = TRUE;
+          }
         }
         sem_post(&wait_boat);
       }
@@ -713,6 +907,12 @@ void woman_castaway(ptr_castaway_arg castaway_arg){
         boat_waiting = FALSE;
         printf(COLOR_BRIGHT_MAGENTA "Não restam náufragos na ilha\n" COLOR_RESET);
         last_standing = castaway_arg->id;
+        if(castaway_arg->kills == 0 && castaway_arg->eaten == 0){
+          peace = TRUE;
+        }
+        if(capacity == BOAT_CAPACITY-1){
+          almost = TRUE;
+        }
         sem_post(&wait_boat);
       }
       pthread_cond_broadcast(&cm);
@@ -731,6 +931,7 @@ void man_castaway(ptr_castaway_arg castaway_arg){
   if(castaway_arg->status == 0){
     if(boat_waiting){
       printf(COLOR_BRIGHT_YELLOW "Náufrago %d (%s - HOMEM): Estou na fila do barco!\n" COLOR_RESET, castaway_arg->id, castaway_arg->name);
+      castaway_arg->line++;
       sleep(1);
     }
     while ((children_waiting > 0 || female_waiting > 0) && boat_waiting){
@@ -752,6 +953,9 @@ void man_castaway(ptr_castaway_arg castaway_arg){
         printf(COLOR_BRIGHT_MAGENTA "Náufrago %d (%s - HOMEM): Galera... o barco lotou\n" COLOR_RESET, castaway_arg->id, castaway_arg->name);
         if(number_alive == 0){
           last_standing = castaway_arg->id;
+          if(castaway_arg->kills == 0 && castaway_arg->eaten == 0){
+            peace = TRUE;
+          }
         }
         sem_post(&wait_boat);
       }
@@ -759,6 +963,12 @@ void man_castaway(ptr_castaway_arg castaway_arg){
         boat_waiting = FALSE;
         printf(COLOR_BRIGHT_MAGENTA "Não restam náufragos na ilha\n" COLOR_RESET);
         last_standing = castaway_arg->id;
+        if(castaway_arg->kills == 0 && castaway_arg->eaten == 0){
+          peace = TRUE;
+        }
+        if(capacity == BOAT_CAPACITY-1){
+          almost = TRUE;
+        }
         sem_post(&wait_boat);
       }
       pthread_cond_broadcast(&cm);
@@ -812,6 +1022,7 @@ void *surviving(void *arg) {
       printf("Náufrago %d (%s): Vou comer... ainda existem %d porções de comida\n", castaway_arg->id, castaway_arg->name, comida);
       sleep(1);
       comida-=EAT;
+      castaway_arg->eaten+=EAT;
       if(comida == 0){
         printf(COLOR_BRIGHT_MAGENTA "Náufrago %d (%s): EITA... existem %d porções de comida... alguém precisa ser sacrificado!\n" COLOR_RESET, castaway_arg->id, castaway_arg->name, comida);
         id_kill = kill_someone(castaway_arg->id);
@@ -825,6 +1036,7 @@ void *surviving(void *arg) {
           sleep(2);
           printf(COLOR_BRIGHT_RED "Náufrago %d (%s) morreu de fome!\n" COLOR_RESET, castaway_arg->id, castaway_arg->name);
           last_standing = castaway_arg->id;
+          easter_egg_printer(id_kill,id_kill);
         }
         else{
           if(cast_arg[id_kill].sex == 2 || cast_arg[id_kill].sex == 3){
@@ -835,6 +1047,7 @@ void *surviving(void *arg) {
             printf(COLOR_BRIGHT_RED "Náufrago %d (%s) foi morto por Náufrago %d (%s)... Conseguiu-se %d porções de comida a mais! -- restam: %d\n" COLOR_RESET, cast_arg[id_kill].id, cast_arg[id_kill].name, castaway_arg->id, castaway_arg->name, HUMAN_FOOD, number_alive);
             comida += HUMAN_FOOD;
           }
+          easter_egg_printer(id_kill, castaway_arg->id);
         }
       }
     }
@@ -866,8 +1079,13 @@ int shipwreck(){
   capacity = BOAT_CAPACITY;
   boat_waiting = FALSE;
   oac = -1;
+  pc = -1;
   first_left = -1;
   last_standing = -1;
+  first_killer = -1;
+  first_blood = -1;
+  almost = FALSE;
+  peace = FALSE;
   sem_init(&wait_boat, 0, 0);
 
   printf(COLOR_BRIGHT_CYAN "-------------------------\n");
@@ -876,7 +1094,7 @@ int shipwreck(){
   printf("Os %d sobreviventes nadaram até uma ilha próxima e aguardam resgate...\n", CASTAWAYS);
   initialize_food();
   printf("Um total equivalente à %d porções de comida foi levado dos restos do navio até a ilha...\n", comida);
-  printf("Quantos sobreviverão???\n\n");
+  printf(COLOR_BRIGHT_RED "Quantos sobreviverão???\n\n" COLOR_RESET);
 
   initialize_castaways();
   print_castaways(0);
