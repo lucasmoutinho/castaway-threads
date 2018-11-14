@@ -363,7 +363,10 @@ void initialize_castaways(){
   for(i = 0; i < length; i++){
     cast_arg[i].id = i;
     cast_arg[i].status = 0;
-    cast_arg[i].sex = (rand() % 4);
+    cast_arg[i].sex = (rand() % 3);
+    if(cast_arg[i].sex == 2){
+      cast_arg[i].sex = (rand() % 2) + 2;
+    }
     cast_arg[i].kills = 0;
     cast_arg[i].xuxa = 0;
     cast_arg[i].eaten = 0;
@@ -585,7 +588,7 @@ void print_castaways(int mode){
     /* O que mais matou */
     top = top_kills();
     if(top > 0){
-      printf("O que mais matou (MVP) - ");
+      printf("O náufrago que mais matou (MVP) - ");
       printf(COLOR_BRIGHT_RED "Só na facadinha! (%d Mortes): ", top);
       for(i = 0; i < length; i++){
         if(cast_arg[i].kills == top){
@@ -598,7 +601,7 @@ void print_castaways(int mode){
     /* Criança que mais matou */
     top = top_kid_kills();
     if(top > 0){
-      printf("Criança que mais matou - ");
+      printf("A criança que mais matou - ");
       printf(COLOR_BRIGHT_YELLOW "Aquele sobrinho bizarro! (%d Mortes): ", top);
       for(i = 0; i < length; i++){
         if(cast_arg[i].kills == top && (cast_arg[i].sex == 2 || cast_arg[i].sex == 3)){
