@@ -519,7 +519,7 @@ Caso o modo seja 1, imprime uma lista de conquistas
 */
 void print_castaways(int mode){
   int length = CASTAWAYS;
-  int i, top, min;
+  int i, top, min, found = FALSE;
 
   printf(COLOR_BRIGHT_CYAN "-------------------------\n");
   printf("LISTA DOS NÁUFRAGOS\n\n" COLOR_RESET);
@@ -629,6 +629,21 @@ void print_castaways(int mode){
       for(i = 0; i < length; i++){
         if(cast_arg[i].eaten == top){
           printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
+          if(cast_arg[i].kills == 0){
+            found = TRUE;
+          }
+        }
+      }
+      printf("\n" COLOR_RESET);
+    }
+
+    /* O que mais comeu mas não matou ninguém */
+    if(found){
+      printf("Foi o que mais comeu, mas não matou ninguém - ");
+      printf(COLOR_BRIGHT_YELLOW "Eu tenho mãos delicadas!: ");
+      for(i = 0; i < length; i++){
+        if(cast_arg[i].eaten == top && cast_arg[i].kills == 0){
+          printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
         }
       }
       printf("\n" COLOR_RESET);
@@ -638,7 +653,7 @@ void print_castaways(int mode){
     min = min_eaten();
     if(top > 0){
       printf("O que menos comeu - ");
-      printf(COLOR_BRIGHT_CYAN "To de boas desse rolê... (%d Porções): ", min);
+      printf(COLOR_BRIGHT_CYAN "To de boas desse rolê aí... (%d Porções): ", min);
       for(i = 0; i < length; i++){
         if(cast_arg[i].eaten == min){
           printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
@@ -651,7 +666,7 @@ void print_castaways(int mode){
     top = top_line();
     if(top > 0){
       printf("O que entrou na fila mais vezes antes de ser resgatado ou morto - ");
-      printf(COLOR_BRIGHT_MAGENTA "O bicho mais rejeitado (%d Tentativas): ", top);
+      printf(COLOR_BRIGHT_MAGENTA "O mais rejeitado do bonde (%d Tentativas): ", top);
       for(i = 0; i < length; i++){
         if(cast_arg[i].line == top){
           printf("-- Náufrago %d (%s) -- ", cast_arg[i].id, cast_arg[i].name);
@@ -681,7 +696,7 @@ void print_castaways(int mode){
     /* Foi resgatado logo antes de morrer de fome */
     if(peace){
       printf("Foi o último a ser resgatado, não matou e não comeu ninguém - ");
-      printf(COLOR_BRIGHT_CYAN "O Maior de todos os Santos: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[last_standing].id, cast_arg[last_standing].name);
+      printf(COLOR_BRIGHT_GREEN "O Maior de todos os Santos: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[last_standing].id, cast_arg[last_standing].name);
     }
 
     /* O último a sair da ilha (vivo ou morto) */
