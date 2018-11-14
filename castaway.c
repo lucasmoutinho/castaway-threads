@@ -696,7 +696,7 @@ void print_castaways(int mode){
     /* Foi resgatado logo antes de morrer de fome */
     if(peace){
       printf("Foi o último a ser resgatado, não matou e não comeu ninguém - ");
-      printf(COLOR_BRIGHT_GREEN "O Maior de todos os Santos: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[last_standing].id, cast_arg[last_standing].name);
+      printf(COLOR_BRIGHT_CYAN "O Maior de todos os Santos: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[last_standing].id, cast_arg[last_standing].name);
     }
 
     /* O último a sair da ilha (vivo ou morto) */
@@ -896,7 +896,7 @@ void woman_castaway(ptr_castaway_arg castaway_arg){
     while (children_waiting > 0 && boat_waiting){
       pthread_cond_wait(&cw, &l);
     }
-    
+
     if(boat_waiting && castaway_arg->status == 0){
       capacity--;
       number_alive--;
