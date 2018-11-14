@@ -17,7 +17,7 @@ Bibliotecas
 
 #define TRUE 1          /* verdadeiro */
 #define FALSE 0         /* falso */
-#define CASTAWAYS 50    /* Número inicial de Náufragos na ilha */
+#define CASTAWAYS 20    /* Número inicial de Náufragos na ilha */
 #define HUMAN_FOOD 200  /* Quantidade de porções que um Náufrago morto adulto gera */
 #define KID_FOOD 100    /* Quantidade de porções que um Náufrago morto criança gera */
 #define EAT 20          /* Quantidade de porções comidas por vez por cada náufrago */
