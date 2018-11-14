@@ -896,8 +896,8 @@ void woman_castaway(ptr_castaway_arg castaway_arg){
     while (children_waiting > 0 && boat_waiting){
       pthread_cond_wait(&cw, &l);
     }
-
-    if(boat_waiting){
+    
+    if(boat_waiting && castaway_arg->status == 0){
       capacity--;
       number_alive--;
       castaway_arg->status = 1;
@@ -953,7 +953,7 @@ void man_castaway(ptr_castaway_arg castaway_arg){
       pthread_cond_wait(&cm, &l);
     }
 
-    if(boat_waiting){
+    if(boat_waiting && castaway_arg->status == 0){
       capacity--;
       number_alive--;
       castaway_arg->status = 1;
