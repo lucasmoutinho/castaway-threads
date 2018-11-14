@@ -84,6 +84,7 @@ int capacity = BOAT_CAPACITY;                                                   
 int id_kill;                                                                          /* ID do Náufrago que morreu */
 int used_male_names[100], used_female_names[100];                                     /* Vetor de nomes usados */
 int oac, pc, first_left, last_standing, first_blood, first_killer, almost, peace;     /* ID para as Variáveis de conquista */
+int bolso, pt, joke;                                                                        /* ID para as Variáveis de conquista */
 
 /*
 Lista de nomes masculinos
@@ -654,7 +655,7 @@ void print_castaways(int mode){
 
     /* O que menos comeu */
     min = min_eaten();
-    if(top > 0){
+    if(min >= 0){
       printf("O que menos comeu - ");
       printf(COLOR_BRIGHT_CYAN "To de boas desse rolê aí... (%d Porções): ", min);
       for(i = 0; i < length; i++){
@@ -688,6 +689,24 @@ void print_castaways(int mode){
     if(pc != -1){
       printf("Matou o Alchieri - ");
       printf(COLOR_BRIGHT_YELLOW "O moleque que reprovou PC: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[pc].id, cast_arg[pc].name);
+    }
+
+    /* Quem matou a Ladeira */
+    if(joke != -1){
+      printf("Matou o Ladeira - ");
+      printf(COLOR_BRIGHT_YELLOW "Não gosto de piada: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[joke].id, cast_arg[joke].name);
+    }
+
+    /* Quem matou o Bolsonaro */
+    if(bolso != -1){
+      printf("Matou o Bolsonaro - ");
+      printf(COLOR_BRIGHT_RED "A verdadeira facadinha: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[bolso].id, cast_arg[bolso].name);
+    }
+
+    /* Quem matou a Dilma */
+    if(pt != -1){
+      printf("Matou a Dilma - ");
+      printf(COLOR_BRIGHT_RED "Impeachment: -- Náufrago %d (%s) --\n" COLOR_RESET, cast_arg[pt].id, cast_arg[pt].name);
     }
 
     /* Foi resgatado logo antes de morrer de fome */
@@ -778,15 +797,36 @@ void easter_egg_printer(int dead_id, int killer_id){
     else if(strcmp(cast_arg[dead_id].name, "Alchieri") == 0){
       pc = killer_id;
     }
+    else if(strcmp(cast_arg[dead_id].name, "Dilma") == 0){
+      pt = killer_id;
+    }
+    else if(strcmp(cast_arg[dead_id].name, "Bolsonaro") == 0){
+      bolso = killer_id;
+    }
+    else if(strcmp(cast_arg[dead_id].name, "Ladeira") == 0){
+      joke = killer_id;
+    }
   }
   if(strcmp(cast_arg[dead_id].name, "Alcione") == 0){
     printf(COLOR_BRIGHT_YELLOW "Mas tem que me prender! TEEEEEMMM que seduziirrr!\n" COLOR_RESET);
   }
   else if(strcmp(cast_arg[dead_id].name, "Focátia") == 0){
-    printf(COLOR_BRIGHT_YELLOW "Vai lá e faz!\n" COLOR_RESET);
+    printf(COLOR_BRIGHT_YELLOW "Ai meu deus roubaram a Focátia!\n" COLOR_RESET);
   }
   else if(strcmp(cast_arg[dead_id].name, "Cabrinha") == 0){
     printf(COLOR_BRIGHT_YELLOW "Béééé!\n" COLOR_RESET);
+  }
+  else if(strcmp(cast_arg[dead_id].name, "Guidinha") == 0){
+    printf(COLOR_BRIGHT_YELLOW "Sempre te admireo!\n" COLOR_RESET);
+  }
+  else if(strcmp(cast_arg[dead_id].name, "Sílvio Santos") == 0){
+    printf(COLOR_BRIGHT_YELLOW "Não vai ganhar aviãozinho\n" COLOR_RESET);
+  }
+  else if(strcmp(cast_arg[dead_id].name, "Galvão") == 0){
+    printf(COLOR_BRIGHT_YELLOW "Hoje Não!....Hoje Sim!\n" COLOR_RESET);
+  }
+  else if(strcmp(cast_arg[dead_id].name, "Bolsonaro") == 0){
+    printf(COLOR_BRIGHT_YELLOW "TCHÁÁÁÁÁÁÁÁÁÁ!\n" COLOR_RESET);
   }
 }
 
@@ -868,6 +908,7 @@ void children_castaway(ptr_castaway_arg castaway_arg){
       else if(number_alive == 0){
         boat_waiting = FALSE;
         printf(COLOR_BRIGHT_MAGENTA "Não restam náufragos na ilha\n" COLOR_RESET);
+        sleep(1);
         last_standing = castaway_arg->id;
         if(castaway_arg->kills == 0 && castaway_arg->eaten == 0){
           peace = TRUE;
@@ -924,6 +965,7 @@ void woman_castaway(ptr_castaway_arg castaway_arg){
       else if(number_alive == 0){
         boat_waiting = FALSE;
         printf(COLOR_BRIGHT_MAGENTA "Não restam náufragos na ilha\n" COLOR_RESET);
+        sleep(1);
         last_standing = castaway_arg->id;
         if(castaway_arg->kills == 0 && castaway_arg->eaten == 0){
           peace = TRUE;
@@ -980,6 +1022,7 @@ void man_castaway(ptr_castaway_arg castaway_arg){
       else if(number_alive == 0){
         boat_waiting = FALSE;
         printf(COLOR_BRIGHT_MAGENTA "Não restam náufragos na ilha\n" COLOR_RESET);
+        sleep(1);
         last_standing = castaway_arg->id;
         if(castaway_arg->kills == 0 && castaway_arg->eaten == 0){
           peace = TRUE;
@@ -1053,8 +1096,9 @@ void *surviving(void *arg) {
           boat_waiting = FALSE;
           sleep(2);
           printf(COLOR_BRIGHT_RED "Náufrago %d (%s) morreu de fome!\n" COLOR_RESET, castaway_arg->id, castaway_arg->name);
-          last_standing = castaway_arg->id;
           easter_egg_printer(id_kill,id_kill);
+          sleep(1);
+          last_standing = castaway_arg->id;
         }
         else{
           if(cast_arg[id_kill].sex == 2 || cast_arg[id_kill].sex == 3){
@@ -1098,6 +1142,9 @@ int shipwreck(){
   boat_waiting = FALSE;
   oac = -1;
   pc = -1;
+  bolso = -1;
+  pt = -1;
+  joke = -1;
   first_left = -1;
   last_standing = -1;
   first_killer = -1;
